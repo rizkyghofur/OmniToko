@@ -277,6 +277,8 @@ ipcMain.handle("create-tab", (event, { tabId, url, sessionId }) => {
       session: ses,
       nodeIntegration: false,
       contextIsolation: true,
+      sandbox: true,
+      pinchZoom: true,
     },
   });
 
@@ -408,6 +410,22 @@ ipcMain.handle("go-forward", (event, tabId) => {
 
 ipcMain.handle("reload", (event, tabId) => {
   if (views[tabId]) views[tabId].webContents.reload();
+});
+
+ipcMain.handle("zoom-in", (event, tabId) => {
+  if (views[tabId]) {
+    views[tabId].webContents.setZoomLevel(
+      views[tabId].webContents.getZoomLevel() + 0.5,
+    );
+  }
+});
+
+ipcMain.handle("zoom-out", (event, tabId) => {
+  if (views[tabId]) {
+    views[tabId].webContents.setZoomLevel(
+      views[tabId].webContents.getZoomLevel() - 0.5,
+    );
+  }
 });
 
 // --- Context Menu ---

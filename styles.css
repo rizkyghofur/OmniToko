@@ -468,6 +468,40 @@ body.layout-top #layout-toggle-btn {
   color: var(--text-primary);
 }
 
+.zoom-wrapper {
+  display: flex;
+  align-items: center;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  overflow: hidden;
+  height: 30px;
+}
+
+.zoom-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0 10px;
+  height: 100%;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.zoom-btn:hover {
+  background-color: var(--bg-card-hover);
+  color: var(--text-primary);
+}
+
+.zoom-divider {
+  width: 1px;
+  height: 16px;
+  background-color: var(--border-color);
+}
+
 #url-form {
   flex-grow: 1;
 }
