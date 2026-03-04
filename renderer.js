@@ -206,6 +206,45 @@ function init() {
     }
   });
 
+  // --- Keyboard Shortcuts (from main process menu) ---
+  window.omniAPI.onShortcutNewTab(() => showDashboard());
+  window.omniAPI.onShortcutCloseTab(() => {
+    if (activeTabId) closeTab(activeTabId);
+  });
+  window.omniAPI.onShortcutReload(() => {
+    if (activeTabId) window.omniAPI.reload(activeTabId);
+  });
+  window.omniAPI.onShortcutFocusUrl(() => {
+    if (activeTabId) urlInput.focus();
+  });
+  window.omniAPI.onShortcutGoHome(() => showDashboard());
+  window.omniAPI.onShortcutNextTab(() => switchTabByOffset(1));
+  window.omniAPI.onShortcutPrevTab(() => switchTabByOffset(-1));
+  window.omniAPI.onShortcutSwitchTab((idx) => {
+    if (tabs[idx]) setActiveTab(tabs[idx].id);
+  });
+
+  // --- Context Menu: Open link in new tab ---
+  window.omniAPI.onOpenLinkNewTab(({ url }) => {
+    createSessionTab(url, "Link", "#8B5CF6");
+  });
+
+  // --- Download Notifications ---
+  window.omniAPI.onDownloadStarted(({ id, fileName }) => {
+    showDownloadToast(id, `⬇️ Downloading: ${fileName}`, 0);
+  });
+  window.omniAPI.onDownloadProgress(({ id, fileName, percent }) => {
+    updateDownloadToast(id, `⬇️ ${fileName} — ${percent}%`, percent);
+  });
+  window.omniAPI.onDownloadComplete(({ id, fileName }) => {
+    updateDownloadToast(id, `✅ Downloaded: ${fileName}`, 100);
+    setTimeout(() => removeDownloadToast(id), 4000);
+  });
+  window.omniAPI.onDownloadFailed(({ id, fileName }) => {
+    updateDownloadToast(id, `❌ Failed: ${fileName}`, 0);
+    setTimeout(() => removeDownloadToast(id), 4000);
+  });
+
   // Load data
   loadSessions();
   loadUserShortcuts();
@@ -528,6 +567,17 @@ async function closeTab(tabId) {
   }
 }
 
+// --- Tab Navigation by Offset ---
+
+function switchTabByOffset(offset) {
+  if (tabs.length === 0) return;
+  const currentIdx = tabs.findIndex((t) => t.id === activeTabId);
+  let newIdx = currentIdx + offset;
+  if (newIdx < 0) newIdx = tabs.length - 1;
+  if (newIdx >= tabs.length) newIdx = 0;
+  setActiveTab(tabs[newIdx].id);
+}
+
 // --- Theme ---
 
 async function initTheme() {
@@ -538,6 +588,56 @@ async function initTheme() {
 function applyTheme(theme) {
   document.documentElement.setAttribute("data-theme", theme);
   themeCheckbox.checked = theme === "dark";
+}
+
+// --- Download Toast Notifications ---
+
+function getOrCreateToastContainer() {
+  let container = document.getElementById("download-toasts");
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "download-toasts";
+    document.body.appendChild(container);
+  }
+  return container;
+}
+
+function showDownloadToast(id, message, percent) {
+  const container = getOrCreateToastContainer();
+  const toast = document.createElement("div");
+  toast.className = "download-toast";
+  toast.id = `toast-${id}`;
+  toast.innerHTML = `
+    <div class="toast-message">${message}</div>
+    <div class="toast-progress-bar">
+      <div class="toast-progress-fill" style="width: ${percent}%"></div>
+    </div>
+  `;
+  container.appendChild(toast);
+  // Trigger animation
+  requestAnimationFrame(() => toast.classList.add("visible"));
+}
+
+function updateDownloadToast(id, message, percent) {
+  const toast = document.getElementById(`toast-${id}`);
+  if (toast) {
+    toast.querySelector(".toast-message").textContent = message;
+    toast.querySelector(".toast-progress-fill").style.width = `${percent}%`;
+    if (percent >= 100) {
+      toast.querySelector(".toast-progress-fill").classList.add("complete");
+    }
+  } else {
+    showDownloadToast(id, message, percent);
+  }
+}
+
+function removeDownloadToast(id) {
+  const toast = document.getElementById(`toast-${id}`);
+  if (toast) {
+    toast.classList.remove("visible");
+    toast.classList.add("hiding");
+    setTimeout(() => toast.remove(), 300);
+  }
 }
 
 // Boot

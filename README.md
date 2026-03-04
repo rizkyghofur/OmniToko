@@ -10,53 +10,63 @@ Built with [Electron.js](https://www.electronjs.org/).
 
 ### 🔐 Session Isolation
 
-Each tab runs in a **completely isolated session** using Electron's `session.fromPartition()`. Login to Shopee on Tab 1, Tokopedia on Tab 2, and they will never interfere with each other — no more switching browsers!
-
-### 🏠 Dashboard
-
-A branded home page with quick-access marketplace shortcuts:
-
-- **Shopee** Seller Center
-- **Tokopedia** Seller Dashboard
-- **TikTok Shop** Seller Center
-- **Lazada** Seller Center
-- **Blibli** Seller Center
-- **Bukalapak** Seller Center
-- **Shopify** Admin Panel
-- **Open URL** — open any website
+Each tab runs in a **completely isolated session**. Login to Shopee on Tab 1, Tokopedia on Tab 2, and they will never interfere — no more switching browsers!
 
 ### 💾 Persistent Sessions
 
 Login sessions are **saved and persist** across tab close/reopen:
 
-- Sessions are stored with stable partition names
 - Close a tab, reopen later — **you're still logged in!**
-- View all active sessions on the dashboard with **Reopen** / **Focus** / **Delete** controls
-- Session data (cookies, storage) is preserved in Electron's userData
+- Dashboard shows all sessions with **Reopen** / **Focus** / **Delete** controls
+
+### 🏠 Dashboard
+
+Branded home page with quick-access marketplace shortcuts: Shopee, Tokopedia, TikTok Shop, Lazada, Blibli, Bukalapak, Shopify, and custom URLs.
 
 ### ⭐ Custom Shortcuts
 
-Add your own marketplace or store shortcuts:
-
-- Name, URL, and custom color picker
-- Auto-fetches **favicon** from the website
-- Saved persistently — available every time you open the app
-- Delete with one click
+Add your own shortcuts with name, URL, custom color picker, and auto-fetched favicons.
 
 ### 🌗 Dark / Light Mode
 
-Toggle between dark and light themes:
+Toggle between themes with persistent preference storage.
 
-- Beautiful dark mode with gradient accents (default)
-- Clean light mode for daytime use
-- Preference is **saved persistently**
+### ⌨️ Keyboard Shortcuts
+
+| Shortcut               | Action              |
+| ---------------------- | ------------------- |
+| `Cmd/Ctrl + T`         | New Tab (Dashboard) |
+| `Cmd/Ctrl + W`         | Close Current Tab   |
+| `Cmd/Ctrl + R`         | Reload Tab          |
+| `Cmd/Ctrl + L`         | Focus URL Bar       |
+| `Cmd/Ctrl + Shift + H` | Go to Dashboard     |
+| `Cmd/Ctrl + Shift + ]` | Next Tab            |
+| `Cmd/Ctrl + Shift + [` | Previous Tab        |
+| `Cmd/Ctrl + 1-9`       | Switch to Tab 1-9   |
+| `Cmd/Ctrl + +`         | Zoom In             |
+| `Cmd/Ctrl + -`         | Zoom Out            |
+| `Cmd/Ctrl + 0`         | Reset Zoom          |
+
+### 🖱️ Context Menu (Right-Click)
+
+Full right-click menu on web pages:
+
+- **Link**: Open in new tab, Copy link
+- **Image**: Copy image, Save image as
+- **Text**: Cut, Copy, Paste, Select All
+- **Page**: Back, Forward, Reload
+
+### 📥 Download Manager
+
+- Automatic download handling with save dialog
+- Toast notifications with real-time progress bar
+- Completion/failure notifications with auto-dismiss
 
 ### 🖥️ Cross-Platform
 
-Built with platform-aware UI:
-
-- **macOS**: Hidden title bar with traffic light buttons, proper safe area padding
-- **Windows/Linux**: Standard title bar, no unnecessary padding
+- **macOS**: Hidden title bar with traffic lights
+- **Windows/Linux**: Standard title bar
+- Custom app icon (replaceable via `assets/icon/`)
 
 ---
 
@@ -64,19 +74,13 @@ Built with platform-aware UI:
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) (v18 or later)
-- [npm](https://www.npmjs.com/) (comes with Node.js)
+- [Node.js](https://nodejs.org/) v18+
 
-### Install & Run (Development)
+### Install & Run
 
 ```bash
-# Clone or download the project
 cd OmniToko
-
-# Install dependencies
 npm install
-
-# Run the app
 npm start
 ```
 
@@ -84,45 +88,31 @@ npm start
 
 ## 📦 Building for Distribution
 
-OmniToko uses [electron-builder](https://www.electron.build/) to package the app for all platforms.
-
-### Install build dependencies
-
-```bash
-npm install
-```
-
-### Build for macOS
+### macOS
 
 ```bash
 npm run build:mac
 ```
 
-**Output:** `dist/OmniToko-x.x.x.dmg` and `dist/OmniToko-x.x.x-mac.zip`
+Output: `dist/OmniToko-x.x.x.dmg` + `.zip`
 
-> **Note:** Building for macOS requires a Mac. For distribution via the App Store or notarization, you'll need an Apple Developer certificate. For local/personal use, the unsigned build works fine.
-
-### Build for Windows
+### Windows
 
 ```bash
 npm run build:win
 ```
 
-**Output:** `dist/OmniToko Setup x.x.x.exe` (installer) and `dist/OmniToko x.x.x.exe` (portable)
+Output: `dist/OmniToko Setup x.x.x.exe` (installer) + portable
 
-> **Note:** You can build Windows apps from macOS/Linux using Wine, or natively on Windows. The NSIS installer allows users to choose the installation directory.
-
-### Build for Linux
+### Linux
 
 ```bash
 npm run build:linux
 ```
 
-**Output:** `dist/OmniToko-x.x.x.AppImage` and `dist/omnitoko_x.x.x_amd64.deb`
+Output: `dist/OmniToko-x.x.x.AppImage` + `.deb`
 
-> **Note:** AppImage works on most Linux distributions without installation. The `.deb` package is for Debian/Ubuntu-based systems.
-
-### Build for all platforms
+### All platforms
 
 ```bash
 npm run build
@@ -130,47 +120,50 @@ npm run build
 
 ---
 
+## 🎨 Custom App Icon
+
+Replace `assets/icon/icon.png` with your own **1024×1024 PNG** icon before building.
+
+See `assets/icon/README.md` for format conversion instructions (`.icns` for macOS, `.ico` for Windows).
+
+---
+
 ## 🗂️ Project Structure
 
 ```
 OmniToko/
-├── main.js          # Main process — window creation, IPC, session management
-├── preload.js       # Preload script — secure bridge between main and renderer
-├── renderer.js      # Renderer process — UI logic, dashboard, tab management
-├── index.html       # App layout — sidebar, dashboard, modals
-├── styles.css       # Styling — dark/light themes, responsive design
-├── package.json     # Project config & build settings
-└── README.md        # This file
+├── main.js          # Main process — windows, IPC, shortcuts, context menu, downloads
+├── preload.js       # Secure bridge between main and renderer
+├── renderer.js      # UI logic — dashboard, tabs, sessions, download toasts
+├── index.html       # Layout — sidebar, dashboard, modals
+├── styles.css       # Themes, responsive design, animations
+├── assets/
+│   └── icon/
+│       ├── icon.png # App icon (1024×1024)
+│       └── README.md
+├── package.json     # Config & build settings
+└── README.md
 ```
 
 ### Data Storage
 
-User data is stored in Electron's `userData` directory:
-
-| File               | Contents                                    |
-| ------------------ | ------------------------------------------- |
-| `shortcuts.json`   | Custom marketplace shortcuts                |
-| `sessions.json`    | Saved login sessions (partition references) |
-| `preferences.json` | Theme preference                            |
-
-**Location:**
-
-- **macOS:** `~/Library/Application Support/OmniToko/`
-- **Windows:** `%APPDATA%/OmniToko/`
-- **Linux:** `~/.config/OmniToko/`
+| File               | Contents         | Location                                          |
+| ------------------ | ---------------- | ------------------------------------------------- |
+| `shortcuts.json`   | Custom shortcuts | `~/Library/Application Support/OmniToko/` (macOS) |
+| `sessions.json`    | Login sessions   | `%APPDATA%/OmniToko/` (Windows)                   |
+| `preferences.json` | Theme preference | `~/.config/OmniToko/` (Linux)                     |
 
 ---
 
 ## 🛠️ Tech Stack
 
-| Technology                       | Purpose                          |
-| -------------------------------- | -------------------------------- |
-| **Electron v40**                 | Desktop app framework            |
-| **BaseWindow + WebContentsView** | Modern Electron window/view APIs |
-| **session.fromPartition()**      | Per-tab session isolation        |
-| **Google Favicon API**           | Auto-fetch website icons         |
-| **CSS Variables**                | Dark/Light theme switching       |
-| **electron-builder**             | Cross-platform packaging         |
+| Technology                   | Purpose                  |
+| ---------------------------- | ------------------------ |
+| Electron v40                 | Desktop framework        |
+| BaseWindow + WebContentsView | Modern window APIs       |
+| session.fromPartition()      | Session isolation        |
+| Google Favicon API           | Auto-fetch icons         |
+| electron-builder             | Cross-platform packaging |
 
 ---
 

@@ -4,6 +4,9 @@ const {
   WebContentsView,
   ipcMain,
   session,
+  globalShortcut,
+  Menu,
+  dialog,
 } = require("electron");
 const path = require("path");
 const fs = require("fs");
@@ -16,6 +19,7 @@ let activeTabId = null;
 const isMac = process.platform === "darwin";
 const SIDEBAR_WIDTH = 220;
 const NAV_HEIGHT = 48;
+const iconPath = path.join(__dirname, "assets", "icon", "icon.png");
 
 function createWindow() {
   mainWindow = new BaseWindow({
@@ -23,6 +27,7 @@ function createWindow() {
     height: 800,
     title: "OmniToko",
     titleBarStyle: isMac ? "hiddenInset" : "default",
+    icon: iconPath,
   });
 
   uiView = new WebContentsView({
@@ -58,6 +63,142 @@ function createWindow() {
   mainWindow.on("closed", () => {
     mainWindow = null;
   });
+
+  // --- Register Keyboard Shortcuts ---
+  setupKeyboardShortcuts();
+
+  // --- Application Menu with Shortcuts ---
+  setupAppMenu();
+}
+
+// --- Keyboard Shortcuts ---
+
+function setupKeyboardShortcuts() {
+  // We use the app menu for keyboard shortcuts (Electron best practice)
+  // This ensures they work correctly on all platforms
+}
+
+function setupAppMenu() {
+  const template = [
+    ...(isMac ? [{ role: "appMenu" }] : []),
+    {
+      label: "File",
+      submenu: [
+        {
+          label: "New Tab",
+          accelerator: "CmdOrCtrl+T",
+          click: () => sendToUI("shortcut-new-tab"),
+        },
+        {
+          label: "Close Tab",
+          accelerator: "CmdOrCtrl+W",
+          click: () => sendToUI("shortcut-close-tab"),
+        },
+        { type: "separator" },
+        isMac ? { role: "close" } : { role: "quit" },
+      ],
+    },
+    {
+      label: "Edit",
+      submenu: [
+        { role: "undo" },
+        { role: "redo" },
+        { type: "separator" },
+        { role: "cut" },
+        { role: "copy" },
+        { role: "paste" },
+        { role: "selectAll" },
+      ],
+    },
+    {
+      label: "View",
+      submenu: [
+        {
+          label: "Reload Tab",
+          accelerator: "CmdOrCtrl+R",
+          click: () => sendToUI("shortcut-reload"),
+        },
+        { type: "separator" },
+        {
+          label: "Zoom In",
+          accelerator: "CmdOrCtrl+Plus",
+          click: () => zoomActiveTab(0.1),
+        },
+        {
+          label: "Zoom Out",
+          accelerator: "CmdOrCtrl+-",
+          click: () => zoomActiveTab(-0.1),
+        },
+        {
+          label: "Reset Zoom",
+          accelerator: "CmdOrCtrl+0",
+          click: () => zoomActiveTab(0, true),
+        },
+        { type: "separator" },
+        {
+          label: "Focus URL Bar",
+          accelerator: "CmdOrCtrl+L",
+          click: () => sendToUI("shortcut-focus-url"),
+        },
+        {
+          label: "Go to Dashboard",
+          accelerator: "CmdOrCtrl+Shift+H",
+          click: () => sendToUI("shortcut-go-home"),
+        },
+        { type: "separator" },
+        { role: "togglefullscreen" },
+      ],
+    },
+    {
+      label: "Tab",
+      submenu: [
+        {
+          label: "Next Tab",
+          accelerator: "CmdOrCtrl+Shift+]",
+          click: () => sendToUI("shortcut-next-tab"),
+        },
+        {
+          label: "Previous Tab",
+          accelerator: "CmdOrCtrl+Shift+[",
+          click: () => sendToUI("shortcut-prev-tab"),
+        },
+        { type: "separator" },
+        ...Array.from({ length: 9 }, (_, i) => ({
+          label: `Tab ${i + 1}`,
+          accelerator: `CmdOrCtrl+${i + 1}`,
+          click: () => sendToUI("shortcut-switch-tab", i),
+        })),
+      ],
+    },
+    {
+      label: "Window",
+      submenu: [
+        { role: "minimize" },
+        { role: "zoom" },
+        ...(isMac ? [{ type: "separator" }, { role: "front" }] : []),
+      ],
+    },
+  ];
+
+  const menu = Menu.buildFromTemplate(template);
+  Menu.setApplicationMenu(menu);
+}
+
+function sendToUI(channel, data) {
+  if (uiView && !uiView.webContents.isDestroyed()) {
+    uiView.webContents.send(channel, data);
+  }
+}
+
+function zoomActiveTab(delta, reset = false) {
+  if (activeTabId && views[activeTabId]) {
+    const wc = views[activeTabId].webContents;
+    if (reset) {
+      wc.setZoomLevel(0);
+    } else {
+      wc.setZoomLevel(wc.getZoomLevel() + delta);
+    }
+  }
 }
 
 app.whenReady().then(() => {
@@ -76,6 +217,9 @@ app.on("window-all-closed", () => {
 ipcMain.handle("create-tab", (event, { tabId, url, sessionId }) => {
   const partitionName = sessionId || `tab-${tabId}`;
   const ses = session.fromPartition(`persist:${partitionName}`);
+
+  // --- Download Manager: Attach to each session ---
+  setupDownloadHandler(ses);
 
   const view = new WebContentsView({
     webPreferences: {
@@ -98,6 +242,7 @@ ipcMain.handle("create-tab", (event, { tabId, url, sessionId }) => {
 
   view.webContents.loadURL(url || "https://google.com");
 
+  // IPC events for URL/title/loading
   view.webContents.on("did-navigate", (e, newUrl) => {
     if (uiView && !uiView.webContents.isDestroyed())
       uiView.webContents.send("url-updated", { tabId, url: newUrl });
@@ -118,6 +263,9 @@ ipcMain.handle("create-tab", (event, { tabId, url, sessionId }) => {
     if (uiView && !uiView.webContents.isDestroyed())
       uiView.webContents.send("loading-status", { tabId, isLoading: false });
   });
+
+  // --- Context Menu: Attach to each webview ---
+  setupContextMenu(view.webContents, tabId);
 
   switchTab(tabId);
   return true;
@@ -184,6 +332,172 @@ ipcMain.handle("reload", (event, tabId) => {
   if (views[tabId]) views[tabId].webContents.reload();
 });
 
+// --- Context Menu ---
+
+function setupContextMenu(webContents, tabId) {
+  webContents.on("context-menu", (event, params) => {
+    const menuItems = [];
+
+    // Link actions
+    if (params.linkURL) {
+      menuItems.push({
+        label: "Open Link in New Tab",
+        click: () => {
+          sendToUI("open-link-new-tab", { url: params.linkURL });
+        },
+      });
+      menuItems.push({
+        label: "Copy Link Address",
+        click: () => {
+          require("electron").clipboard.writeText(params.linkURL);
+        },
+      });
+      menuItems.push({ type: "separator" });
+    }
+
+    // Image actions
+    if (params.mediaType === "image") {
+      menuItems.push({
+        label: "Copy Image",
+        click: () => webContents.copyImageAt(params.x, params.y),
+      });
+      menuItems.push({
+        label: "Copy Image Address",
+        click: () => {
+          require("electron").clipboard.writeText(params.srcURL);
+        },
+      });
+      menuItems.push({
+        label: "Save Image As...",
+        click: () => webContents.downloadURL(params.srcURL),
+      });
+      menuItems.push({ type: "separator" });
+    }
+
+    // Text selection actions
+    if (params.selectionText) {
+      menuItems.push({
+        label: "Cut",
+        role: "cut",
+        enabled: params.editFlags.canCut,
+      });
+      menuItems.push({ label: "Copy", role: "copy" });
+    }
+
+    // Editable field actions
+    if (params.isEditable) {
+      if (!params.selectionText) {
+        menuItems.push({
+          label: "Cut",
+          role: "cut",
+          enabled: params.editFlags.canCut,
+        });
+        menuItems.push({
+          label: "Copy",
+          role: "copy",
+          enabled: params.editFlags.canCopy,
+        });
+      }
+      menuItems.push({ label: "Paste", role: "paste" });
+      menuItems.push({ label: "Select All", role: "selectAll" });
+    }
+
+    // General actions
+    if (
+      !params.linkURL &&
+      !params.selectionText &&
+      params.mediaType === "none" &&
+      !params.isEditable
+    ) {
+      menuItems.push({
+        label: "Back",
+        enabled: webContents.canGoBack(),
+        click: () => webContents.goBack(),
+      });
+      menuItems.push({
+        label: "Forward",
+        enabled: webContents.canGoForward(),
+        click: () => webContents.goForward(),
+      });
+      menuItems.push({
+        label: "Reload",
+        click: () => webContents.reload(),
+      });
+      menuItems.push({ type: "separator" });
+      menuItems.push({ label: "Select All", role: "selectAll" });
+    }
+
+    // Always show Copy if there's text selected
+    if (menuItems.length === 0) {
+      menuItems.push({
+        label: "Back",
+        enabled: webContents.canGoBack(),
+        click: () => webContents.goBack(),
+      });
+      menuItems.push({
+        label: "Forward",
+        enabled: webContents.canGoForward(),
+        click: () => webContents.goForward(),
+      });
+      menuItems.push({ label: "Reload", click: () => webContents.reload() });
+    }
+
+    const contextMenu = Menu.buildFromTemplate(menuItems);
+    contextMenu.popup({ window: mainWindow });
+  });
+}
+
+// --- Download Manager ---
+
+const activeDownloads = new Map();
+
+function setupDownloadHandler(ses) {
+  ses.on("will-download", (event, item, webContents) => {
+    const fileName = item.getFilename();
+    const totalBytes = item.getTotalBytes();
+    const downloadId = `dl_${Date.now()}`;
+
+    // Notify UI about new download
+    sendToUI("download-started", {
+      id: downloadId,
+      fileName,
+      totalBytes,
+      savePath: item.getSavePath(),
+    });
+
+    activeDownloads.set(downloadId, item);
+
+    item.on("updated", (event, state) => {
+      if (state === "progressing") {
+        const received = item.getReceivedBytes();
+        sendToUI("download-progress", {
+          id: downloadId,
+          fileName,
+          receivedBytes: received,
+          totalBytes,
+          percent:
+            totalBytes > 0 ? Math.round((received / totalBytes) * 100) : 0,
+        });
+      } else if (state === "interrupted") {
+        sendToUI("download-failed", { id: downloadId, fileName });
+      }
+    });
+
+    item.once("done", (event, state) => {
+      activeDownloads.delete(downloadId);
+      if (state === "completed") {
+        sendToUI("download-complete", {
+          id: downloadId,
+          fileName,
+          savePath: item.getSavePath(),
+        });
+      } else {
+        sendToUI("download-failed", { id: downloadId, fileName });
+      }
+    });
+  });
+}
+
 // --- Utility ---
 
 function getFaviconUrl(siteUrl) {
@@ -237,7 +551,7 @@ ipcMain.handle("remove-shortcut", (event, shortcutId) => {
   return shortcuts;
 });
 
-// --- Sessions (persist login state) ---
+// --- Sessions ---
 
 const sessionsPath = () => path.join(app.getPath("userData"), "sessions.json");
 
