@@ -15,6 +15,10 @@ contextBridge.exposeInMainWorld("omniAPI", {
   getSessions: () => ipcRenderer.invoke("get-sessions"),
   saveSession: (data) => ipcRenderer.invoke("save-session", data),
   removeSession: (id) => ipcRenderer.invoke("remove-session", id),
+  renameSession: (data) => ipcRenderer.invoke("rename-session", data),
+  updateSessionSettings: (data) =>
+    ipcRenderer.invoke("update-session-settings", data),
+  clearSessionData: (id) => ipcRenderer.invoke("clear-session-data", id),
 
   // Theme
   getTheme: () => ipcRenderer.invoke("get-theme"),

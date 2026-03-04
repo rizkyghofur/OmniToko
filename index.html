@@ -710,7 +710,7 @@
 
     <!-- Rename Session Modal -->
     <div id="rename-modal-overlay" class="hidden">
-      <div id="rename-modal" class="modal">
+      <div id="rename-modal">
         <h3>Rename Session</h3>
         <form id="rename-form">
           <div class="form-group">
@@ -724,10 +724,54 @@
             />
           </div>
           <div class="form-actions">
-            <button type="button" id="rename-cancel" class="btn-cancel">
+            <button type="button" id="rename-cancel" class="btn-secondary">
               Cancel
             </button>
             <button type="submit" class="btn-primary">Save Name</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Session Settings Modal (Phase 3) -->
+    <div id="session-settings-modal-overlay" class="hidden">
+      <div id="session-settings-modal">
+        <h3>Advanced Session Settings</h3>
+        <p class="modal-subtitle">
+          Configure isolation settings for this specific session.
+        </p>
+        <form id="session-settings-form">
+          <div class="form-group">
+            <label for="proxy-input">Custom Proxy (IP:Port)</label>
+            <input
+              type="text"
+              id="proxy-input"
+              placeholder="e.g. 192.168.1.1:8080 or http://user:pass@ip:port"
+            />
+            <small class="help-text"
+              >Leave blank to use system IP. Supports http/socks.</small
+            >
+          </div>
+          <div class="form-group" style="margin-top: 12px">
+            <label for="ua-input">Custom User-Agent</label>
+            <input
+              type="text"
+              id="ua-input"
+              placeholder="e.g. Mozilla/5.0 (iPhone; CPU iPhone OS 16_0...)"
+            />
+            <small class="help-text"
+              >Leave blank for default Desktop Chrome.</small
+            >
+          </div>
+          <div class="form-actions" style="margin-top: 24px">
+            <button
+              type="button"
+              id="session-settings-cancel"
+              class="btn-secondary"
+            >
+              Cancel
+            </button>
+            <button type="submit" class="btn-primary">Save Settings</button>
           </div>
         </form>
       </div>

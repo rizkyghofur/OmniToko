@@ -269,6 +269,24 @@ ipcMain.handle("create-tab", (event, { tabId, url, sessionId }) => {
   const partitionName = sessionId || `tab-${tabId}`;
   const ses = session.fromPartition(`persist:${partitionName}`);
 
+  // Fetch session settings for Proxy and User-Agent
+  const allSessions = readJSON(sessionsPath(), []);
+  const sessionSettings = allSessions.find((s) => s.sessionId === sessionId);
+
+  if (sessionSettings) {
+    // 1. Apply Custom Proxy Mode
+    if (sessionSettings.proxy) {
+      ses.setProxy({ proxyRules: sessionSettings.proxy });
+    } else {
+      ses.setProxy({ proxyRules: "direct://" });
+    }
+
+    // 2. Apply Custom User Agent
+    if (sessionSettings.userAgent) {
+      ses.setUserAgent(sessionSettings.userAgent);
+    }
+  }
+
   // --- Download Manager: Attach to each session ---
   setupDownloadHandler(ses);
 
@@ -667,6 +685,8 @@ ipcMain.handle(
       color: color || "#8B5CF6",
       favicon: favicon || getFaviconUrl(url),
       lastUsed: Date.now(),
+      proxy: idx >= 0 ? sessions[idx].proxy : undefined,
+      userAgent: idx >= 0 ? sessions[idx].userAgent : undefined,
     };
     if (idx >= 0) {
       sessions[idx] = { ...sessions[idx], ...data };
@@ -686,6 +706,32 @@ ipcMain.handle("rename-session", (event, { sessionId, newName }) => {
     writeJSON(sessionsPath(), sessions);
   }
   return sessions;
+});
+
+ipcMain.handle(
+  "update-session-settings",
+  (event, { sessionId, proxy, userAgent }) => {
+    const sessions = readJSON(sessionsPath(), []);
+    const idx = sessions.findIndex((s) => s.sessionId === sessionId);
+    if (idx >= 0) {
+      sessions[idx].proxy = proxy;
+      sessions[idx].userAgent = userAgent;
+      writeJSON(sessionsPath(), sessions);
+    }
+    return sessions;
+  },
+);
+
+ipcMain.handle("clear-session-data", async (event, sessionId) => {
+  try {
+    const ses = session.fromPartition(`persist:${sessionId}`);
+    await ses.clearStorageData();
+    await ses.clearCache();
+    return true;
+  } catch (e) {
+    console.error("Error clearing session data", e);
+    return false;
+  }
 });
 
 ipcMain.handle("remove-session", (event, sessionId) => {

@@ -66,7 +66,20 @@ const renameModalOverlay = document.getElementById("rename-modal-overlay");
 const renameForm = document.getElementById("rename-form");
 const renameInput = document.getElementById("rename-input");
 const renameCancel = document.getElementById("rename-cancel");
+
+// Phase 3 Modal DOM
+const sessionSettingsModalOverlay = document.getElementById(
+  "session-settings-modal-overlay",
+);
+const sessionSettingsForm = document.getElementById("session-settings-form");
+const proxyInput = document.getElementById("proxy-input");
+const uaInput = document.getElementById("ua-input");
+const sessionSettingsCancel = document.getElementById(
+  "session-settings-cancel",
+);
+
 let currentRenameSessionId = null;
+let currentSettingsSessionId = null;
 
 // --- Initialization ---
 
@@ -290,9 +303,6 @@ function init() {
   zoomOutBtn.addEventListener("click", () => {
     if (activeTabId) window.omniAPI.zoomOut(activeTabId);
   });
-  zoomResetBtn.addEventListener("click", () => {
-    if (activeTabId) window.omniAPI.zoomReset(activeTabId);
-  });
 
   // --- Rename Modal ---
   renameCancel.addEventListener("click", () => {
@@ -305,6 +315,35 @@ function init() {
       currentRenameSessionId = null;
     }
   });
+
+  // --- Session Settings Modal ---
+  sessionSettingsCancel.addEventListener("click", () => {
+    sessionSettingsModalOverlay.classList.add("hidden");
+    currentSettingsSessionId = null;
+  });
+
+  sessionSettingsModalOverlay.addEventListener("click", (e) => {
+    if (e.target === sessionSettingsModalOverlay) {
+      sessionSettingsModalOverlay.classList.add("hidden");
+      currentSettingsSessionId = null;
+    }
+  });
+
+  sessionSettingsForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (currentSettingsSessionId) {
+      await window.omniAPI.updateSessionSettings({
+        sessionId: currentSettingsSessionId,
+        proxy: proxyInput.value.trim(),
+        userAgent: uaInput.value.trim(),
+      });
+      sessionSettingsModalOverlay.classList.add("hidden");
+      currentSettingsSessionId = null;
+      loadSessions();
+      alert("Settings saved. Reopen the session to apply changes.");
+    }
+  });
+
   renameForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     if (currentRenameSessionId) {
@@ -410,7 +449,28 @@ function renderSessions(sessions) {
             ? '<button class="session-btn session-focus" title="Switch to tab">Focus</button>'
             : '<button class="session-btn session-reopen" title="Reopen with saved login">Reopen</button>'
         }
-        <button class="session-btn session-delete" title="Delete session & clear data">✕</button>
+        
+        <!-- Advanced Options Dropdown -->
+        <div class="dropdown-container">
+          <button class="dropdown-btn" title="Advanced Options">⋮</button>
+          <div class="dropdown-menu">
+            <button class="dropdown-item session-settings-btn">
+              <span>⚙️</span> Proxy & User-Agent
+            </button>
+            <button class="dropdown-item session-duplicate-btn">
+              <span>🔄</span> Duplicate Session
+            </button>
+            <button class="dropdown-item session-rename-btn">
+              <span>✎</span> Rename
+            </button>
+            <button class="dropdown-item session-clear-btn danger">
+              <span>🧹</span> Clear Cookies
+            </button>
+            <button class="dropdown-item session-delete-btn danger">
+              <span>🗑️</span> Delete Session
+            </button>
+          </div>
+        </div>
       </div>
     `;
 
@@ -431,16 +491,88 @@ function renderSessions(sessions) {
       });
     }
 
-    // Delete session
-    card
-      .querySelector(".session-delete")
-      .addEventListener("click", async (e) => {
+    // Dropdown toggle
+    const dropdownBtn = card.querySelector(".dropdown-btn");
+    const dropdownMenu = card.querySelector(".dropdown-menu");
+    if (dropdownBtn && dropdownMenu) {
+      dropdownBtn.addEventListener("click", (e) => {
         e.stopPropagation();
-        await window.omniAPI.removeSession(s.sessionId);
-        loadSessions();
+        // Close all other dropdowns
+        document.querySelectorAll(".dropdown-menu").forEach((el) => {
+          if (el !== dropdownMenu) el.classList.remove("show");
+        });
+        dropdownMenu.classList.toggle("show");
       });
+    }
+
+    // Modal Triggers
+    const renameBtn = card.querySelector(".session-rename-btn");
+    if (renameBtn) {
+      renameBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        dropdownMenu.classList.remove("show");
+        currentRenameSessionId = s.sessionId;
+        renameInput.value = s.name;
+        renameModalOverlay.classList.remove("hidden");
+        renameInput.focus();
+      });
+    }
+
+    const settingsBtn = card.querySelector(".session-settings-btn");
+    if (settingsBtn) {
+      settingsBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        dropdownMenu.classList.remove("show");
+        openSessionSettings(s);
+      });
+    }
+
+    const duplicateBtn = card.querySelector(".session-duplicate-btn");
+    if (duplicateBtn) {
+      duplicateBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        dropdownMenu.classList.remove("show");
+        createSessionTab(s.url, s.name + " (Copy)", s.color, s.sessionId);
+      });
+    }
+
+    const clearCookiesBtn = card.querySelector(".session-clear-btn");
+    if (clearCookiesBtn) {
+      clearCookiesBtn.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        dropdownMenu.classList.remove("show");
+        if (
+          confirm(
+            `Are you sure you want to clear cookies for "${s.name}"?\nYou will be logged out!`,
+          )
+        ) {
+          await window.omniAPI.clearSessionData(s.sessionId);
+          alert("Cookies cleared successfully.");
+        }
+      });
+    }
+
+    // Delete session
+    const deleteBtn = card.querySelector(".session-delete-btn");
+    if (deleteBtn) {
+      deleteBtn.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        dropdownMenu.classList.remove("show");
+        if (confirm(`Delete session "${s.name}" permanently?`)) {
+          await window.omniAPI.removeSession(s.sessionId);
+          loadSessions();
+        }
+      });
+    }
 
     sessionsGrid.appendChild(card);
+  });
+
+  // Close dropdowns when clicking outside
+  document.addEventListener("click", () => {
+    document
+      .querySelectorAll(".dropdown-menu")
+      .forEach((el) => el.classList.remove("show"));
   });
 }
 
@@ -584,6 +716,16 @@ function openUrlModal() {
 
 function closeUrlModal() {
   urlModalOverlay.classList.add("hidden");
+}
+
+// --- Session Settings Modal ---
+
+function openSessionSettings(sessionData) {
+  currentSettingsSessionId = sessionData.sessionId;
+  proxyInput.value = sessionData.proxy || "";
+  uaInput.value = sessionData.userAgent || "";
+  sessionSettingsModalOverlay.classList.remove("hidden");
+  proxyInput.focus();
 }
 
 // --- Dashboard ---
