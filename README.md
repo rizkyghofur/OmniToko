@@ -40,6 +40,14 @@ Branded home page with quick-access marketplace shortcuts: Shopee, Tokopedia, Ti
 - **Reopen / Focus / Delete** controls for every session
 - **Session Groups**: Automatically categorizes active sessions by their storefront domain
 - **Session Rename**: Click ✎ to rename auto-generated sessions (e.g., "Shopee Seller" → "Toko Baju - Shopee")
+- **Scrollable List View**: Active sessions cleanly scroll internally when maximizing vertical workspace
+
+### 🛡️ Advanced Session Features (Pro Tools)
+
+- **Per-Session Proxy (`HTTP`/`SOCKS`)**: Assign a unique proxy IP to a specific session. Mask your store's geographical fingerprint to avoid platform bans!
+- **Custom User-Agent**: Spoof the origin browser fingerprint for any session (e.g., simulate an iPhone or custom Desktop Chrome).
+- **Clear Cookies**: Securely nuke isolated session data, cache, and cookies for a single account without affecting adjacent sessions.
+- **Duplicate Session**: Instantly clone an active tab. The new tab inherits the exact authorization token partition, letting you manage the same shop in multiple windows simultaneously!
 
 ### ⭐ Custom Shortcuts
 
