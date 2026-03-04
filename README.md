@@ -63,7 +63,7 @@ Toggle between themes with persistent preference storage.
 | `Cmd/Ctrl + 1-9`       | Switch to Tab 1-9   |
 | `Cmd/Ctrl + +`         | Zoom In             |
 | `Cmd/Ctrl + -`         | Zoom Out            |
-| `Cmd/Ctrl + 0`         | Reset Zoom          |
+| `Cmd/Ctrl + Scroll`    | Pinch to Zoom       |
 
 ### 🖱️ Context Menu (Right-Click)
 
@@ -86,8 +86,8 @@ Full right-click menu on web pages:
 - **Notification Badges**: Sidebar tabs show red notification counters dynamically parsed from website titles (e.g., `(2) New Orders`)
 - **Tab Reordering**: Use drag-and-drop on the sidebar tabs to customize your workspace layout
 - **Data Backup (Import/Export)**: Use the sidebar buttons to export or import all your shortcuts, sessions, and preferences directly to/from a JSON backup file
-- **Loading Bar**: Visual progress indicator in the navigation bar when pages are loading
-- **Zoom Controls**: UI buttons (+, -, Reset) in the navigation bar and keyboard shortcuts to scale store UI up or down
+- **Toggle Layout**: Change the sidebar position dynamically from the traditional vertical left side to a horizontal top layout
+- **Native Zoom Support**: Use the UI buttons (+, -) in the navigation bar or use native trackpad pinch-to-zoom (Cmd/Ctrl + Scroll) to scale store UI
 
 ### 🖥️ Cross-Platform
 
