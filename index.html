@@ -1,0 +1,591 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OmniToko</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div id="app-container">
+      <!-- Sidebar -->
+      <aside id="sidebar">
+        <div id="sidebar-brand">
+          <div id="brand-icon">
+            <svg
+              width="28"
+              height="28"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="white"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+              <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+          </div>
+          <span id="brand-name">OmniToko</span>
+        </div>
+
+        <div id="sidebar-tabs">
+          <!-- Dynamically populated tabs -->
+        </div>
+
+        <button id="add-tab-btn" title="Open New Store Tab">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          <span>New Store Tab</span>
+        </button>
+
+        <!-- Theme Toggle -->
+        <div id="theme-toggle-container">
+          <svg
+            id="theme-icon-sun"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <label class="theme-switch">
+            <input type="checkbox" id="theme-checkbox" />
+            <span class="slider"></span>
+          </label>
+          <svg
+            id="theme-icon-moon"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </div>
+      </aside>
+
+      <!-- Main Content Area -->
+      <main id="main-area">
+        <!-- Top Navigation Bar -->
+        <div id="navigation-bar" class="hidden">
+          <div id="nav-controls">
+            <button id="nav-back" class="nav-btn" title="Back">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+              </svg>
+            </button>
+            <button id="nav-forward" class="nav-btn" title="Forward">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
+            </button>
+            <button id="nav-reload" class="nav-btn" title="Reload">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+              </svg>
+            </button>
+            <button id="nav-home" class="nav-btn" title="Dashboard">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+              </svg>
+            </button>
+          </div>
+          <form id="url-form">
+            <div id="url-input-wrapper">
+              <svg
+                class="url-icon"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+              <input
+                type="text"
+                id="url-input"
+                placeholder="Enter URL or search..."
+                spellcheck="false"
+              />
+            </div>
+          </form>
+        </div>
+
+        <!-- Dashboard -->
+        <div id="dashboard">
+          <div id="dashboard-header">
+            <h1>Welcome to <span class="gradient-text">OmniToko</span></h1>
+            <p>
+              Manage all your e-commerce stores from one place. Each tab has its
+              own isolated session.
+            </p>
+          </div>
+
+          <!-- Active Sessions -->
+          <div id="sessions-section">
+            <div id="sessions-header">
+              <h2>🔐 Active Sessions</h2>
+              <span id="sessions-hint" class="section-hint"
+                >Login sessions are preserved — reopen anytime without
+                re-login</span
+              >
+            </div>
+            <div id="sessions-grid">
+              <!-- Dynamically populated -->
+            </div>
+            <p id="sessions-empty" class="empty-hint">
+              No saved sessions yet. Open a store tab to create one.
+            </p>
+          </div>
+
+          <!-- Marketplace Shortcuts -->
+          <div id="marketplace-section">
+            <h2>🏪 Marketplace</h2>
+          </div>
+
+          <div id="marketplace-grid">
+            <!-- Shopee -->
+            <div
+              class="marketplace-card"
+              data-url="https://seller.shopee.co.id/"
+              data-name="Shopee Seller"
+            >
+              <div
+                class="card-icon"
+                style="background: linear-gradient(135deg, #ee4d2d, #ff6633)"
+              >
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
+                  <path
+                    d="M12 2C9.243 2 7 4.243 7 7h2c0-1.654 1.346-3 3-3s3 1.346 3 3h2c0-2.757-2.243-5-5-5zM20 7H4c-1.103 0-2 .897-2 2v11c0 1.103.897 2 2 2h16c1.103 0 2-.897 2-2V9c0-1.103-.897-2-2-2zm0 13H4V9h16v11z"
+                  />
+                </svg>
+              </div>
+              <div class="card-info">
+                <h3>Shopee</h3>
+                <span>Seller Center</span>
+              </div>
+              <div class="card-arrow">→</div>
+            </div>
+
+            <!-- Tokopedia -->
+            <div
+              class="marketplace-card"
+              data-url="https://seller.tokopedia.com/"
+              data-name="Tokopedia Seller"
+            >
+              <div
+                class="card-icon"
+                style="background: linear-gradient(135deg, #42b549, #2e8b3a)"
+              >
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    fill="none"
+                    stroke="white"
+                    stroke-width="2"
+                  />
+                  <circle cx="12" cy="10" r="3" fill="white" />
+                  <path
+                    d="M6 20c0-3.314 2.686-6 6-6s6 2.686 6 6"
+                    fill="none"
+                    stroke="white"
+                    stroke-width="2"
+                  />
+                </svg>
+              </div>
+              <div class="card-info">
+                <h3>Tokopedia</h3>
+                <span>Seller Dashboard</span>
+              </div>
+              <div class="card-arrow">→</div>
+            </div>
+
+            <!-- TikTok Shop -->
+            <div
+              class="marketplace-card"
+              data-url="https://seller-id.tiktok.com/"
+              data-name="TikTok Shop"
+            >
+              <div
+                class="card-icon"
+                style="background: linear-gradient(135deg, #010101, #333333)"
+              >
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
+                  <path
+                    d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.88-2.88A2.89 2.89 0 0 1 9.49 12.4a2.83 2.83 0 0 1 .89.14V9.07A6.33 6.33 0 0 0 5.47 20.72 6.34 6.34 0 0 0 16.5 16V9.17a8.16 8.16 0 0 0 4.74 1.52v-3.4a4.85 4.85 0 0 1-1.65-.6z"
+                  />
+                </svg>
+              </div>
+              <div class="card-info">
+                <h3>TikTok Shop</h3>
+                <span>Seller Center</span>
+              </div>
+              <div class="card-arrow">→</div>
+            </div>
+
+            <!-- Lazada -->
+            <div
+              class="marketplace-card"
+              data-url="https://sellercenter.lazada.co.id/"
+              data-name="Lazada Seller"
+            >
+              <div
+                class="card-icon"
+                style="background: linear-gradient(135deg, #0f146d, #1a1f87)"
+              >
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
+                  <path
+                    d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
+                  />
+                </svg>
+              </div>
+              <div class="card-info">
+                <h3>Lazada</h3>
+                <span>Seller Center</span>
+              </div>
+              <div class="card-arrow">→</div>
+            </div>
+
+            <!-- Blibli -->
+            <div
+              class="marketplace-card"
+              data-url="https://seller.blibli.com/"
+              data-name="Blibli Seller"
+            >
+              <div
+                class="card-icon"
+                style="background: linear-gradient(135deg, #0095da, #007ab8)"
+              >
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
+                  <rect x="3" y="3" width="7" height="7" rx="1" />
+                  <rect x="14" y="3" width="7" height="7" rx="1" />
+                  <rect x="3" y="14" width="7" height="7" rx="1" />
+                  <rect x="14" y="14" width="7" height="7" rx="1" />
+                </svg>
+              </div>
+              <div class="card-info">
+                <h3>Blibli</h3>
+                <span>Seller Center</span>
+              </div>
+              <div class="card-arrow">→</div>
+            </div>
+
+            <!-- Bukalapak -->
+            <div
+              class="marketplace-card"
+              data-url="https://seller.bukalapak.com/"
+              data-name="Bukalapak Seller"
+            >
+              <div
+                class="card-icon"
+                style="background: linear-gradient(135deg, #e31e52, #c91848)"
+              >
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
+                  <path
+                    d="M20 7H4c-1.103 0-2 .897-2 2v11c0 1.103.897 2 2 2h16c1.103 0 2-.897 2-2V9c0-1.103-.897-2-2-2zM4 20V9h16l.001 11H4z"
+                  />
+                  <path
+                    d="M8.5 7V5.5a3.5 3.5 0 0 1 7 0V7h-2V5.5a1.5 1.5 0 0 0-3 0V7h-2z"
+                  />
+                </svg>
+              </div>
+              <div class="card-info">
+                <h3>Bukalapak</h3>
+                <span>Seller Center</span>
+              </div>
+              <div class="card-arrow">→</div>
+            </div>
+
+            <!-- Shopify -->
+            <div
+              class="marketplace-card"
+              data-url="https://admin.shopify.com/"
+              data-name="Shopify Admin"
+            >
+              <div
+                class="card-icon"
+                style="background: linear-gradient(135deg, #96bf48, #7ab539)"
+              >
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
+                  <path
+                    d="M15.34 3.27a.75.75 0 00-.63-.22 1.3 1.3 0 00-.53.15s-1.1.53-1.76.83c-.18-.56-.5-1.18-.94-1.6C10.7 1.67 9.72 1.5 9 1.5c-2.1 0-3.81 1.67-4.32 4.14l-2.5.77A1.39 1.39 0 001.21 7.6L5.75 22.5l10.5-2.25-.01-16.93a.77.77 0 00-.9-.05zM11.3 5.29c-.68.21-1.45.45-2.2.68.42-1.62 1.23-2.39 2.07-2.64a2.21 2.21 0 01.13 1.96zm-1.42-3c.37 0 .69.13.96.39-.94.44-1.95 1.57-2.38 3.83L6.5 7.08c.5-2 1.65-3.29 3.38-3.29v-.5z"
+                  />
+                </svg>
+              </div>
+              <div class="card-info">
+                <h3>Shopify</h3>
+                <span>Admin Panel</span>
+              </div>
+              <div class="card-arrow">→</div>
+            </div>
+
+            <!-- Open Any URL -->
+            <div
+              class="marketplace-card marketplace-card-open"
+              id="open-url-card"
+            >
+              <div
+                class="card-icon"
+                style="background: linear-gradient(135deg, #8b5cf6, #7c3aed)"
+              >
+                <svg
+                  width="32"
+                  height="32"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="white"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="2" y1="12" x2="22" y2="12"></line>
+                  <path
+                    d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
+                  ></path>
+                </svg>
+              </div>
+              <div class="card-info">
+                <h3>Open URL</h3>
+                <span>Any website</span>
+              </div>
+              <div class="card-arrow">→</div>
+            </div>
+          </div>
+
+          <!-- User Custom Shortcuts -->
+          <div id="user-shortcuts-section">
+            <div id="user-shortcuts-header">
+              <h2>⭐ Your Shortcuts</h2>
+              <button id="add-shortcut-btn" title="Add new shortcut">
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Add Shortcut
+              </button>
+            </div>
+            <div id="user-shortcuts-grid"></div>
+            <p id="user-shortcuts-empty" class="empty-hint">
+              No custom shortcuts yet. Click "Add Shortcut" to create one.
+            </p>
+          </div>
+
+          <div id="dashboard-footer">
+            <p>
+              💡 <strong>Tip:</strong> Each tab runs in a completely isolated
+              session. Log into different stores simultaneously without
+              conflicts!
+            </p>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Add Shortcut Modal -->
+    <div id="modal-overlay" class="hidden">
+      <div id="add-shortcut-modal">
+        <h3>Add New Shortcut</h3>
+        <form id="shortcut-form">
+          <div class="form-group">
+            <label for="shortcut-name">Name</label>
+            <input
+              type="text"
+              id="shortcut-name"
+              placeholder="e.g. Toko ABC - Shopee"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="shortcut-url">URL</label>
+            <input
+              type="text"
+              id="shortcut-url"
+              placeholder="e.g. https://seller.shopee.co.id/"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label>Color</label>
+            <div id="color-picker">
+              <button
+                type="button"
+                class="color-option"
+                data-color="#EE4D2D"
+                style="background: #ee4d2d"
+              ></button>
+              <button
+                type="button"
+                class="color-option"
+                data-color="#42B549"
+                style="background: #42b549"
+              ></button>
+              <button
+                type="button"
+                class="color-option"
+                data-color="#0095DA"
+                style="background: #0095da"
+              ></button>
+              <button
+                type="button"
+                class="color-option"
+                data-color="#E31E52"
+                style="background: #e31e52"
+              ></button>
+              <button
+                type="button"
+                class="color-option"
+                data-color="#F59E0B"
+                style="background: #f59e0b"
+              ></button>
+              <button
+                type="button"
+                class="color-option"
+                data-color="#8B5CF6"
+                style="background: #8b5cf6"
+              ></button>
+              <button
+                type="button"
+                class="color-option"
+                data-color="#EC4899"
+                style="background: #ec4899"
+              ></button>
+              <button
+                type="button"
+                class="color-option"
+                data-color="#10B981"
+                style="background: #10b981"
+              ></button>
+              <div class="custom-color-wrapper" title="Pick any color">
+                <input type="color" id="custom-color-input" value="#6366f1" />
+                <span class="custom-color-label">Custom</span>
+              </div>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="button" id="modal-cancel" class="btn-secondary">
+              Cancel
+            </button>
+            <button type="submit" class="btn-primary">Save Shortcut</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- URL Input Modal (replaces prompt()) -->
+    <div id="url-modal-overlay" class="hidden">
+      <div id="url-modal">
+        <h3>🌐 Open URL</h3>
+        <form id="url-modal-form">
+          <div class="form-group">
+            <label for="url-modal-input">Enter the URL to open</label>
+            <input
+              type="text"
+              id="url-modal-input"
+              placeholder="https://example.com"
+              spellcheck="false"
+              required
+            />
+          </div>
+          <div class="form-actions">
+            <button type="button" id="url-modal-cancel" class="btn-secondary">
+              Cancel
+            </button>
+            <button type="submit" class="btn-primary">Open</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="renderer.js"></script>
+  </body>
+</html>
