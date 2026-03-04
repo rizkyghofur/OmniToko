@@ -329,7 +329,9 @@ function resizeActiveTab() {
   const { width, height } = mainWindow.getContentBounds();
 
   if (currentLayout === "top") {
-    const topBarHeight = isMac ? 106 : 64; // 48 nav bar + 58 sidebar row
+    // Mac: 96px (sidebar) + 48px (nav) = 144px
+    // Windows/Linux: 56px (sidebar) + 48px (nav) = 104px
+    const topBarHeight = isMac ? 144 : 104;
     views[activeTabId].setBounds({
       x: 0,
       y: topBarHeight,
