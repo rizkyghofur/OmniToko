@@ -187,6 +187,47 @@
               />
             </div>
           </form>
+
+          <!-- Zoom Controls -->
+          <div id="zoom-controls">
+            <button id="zoom-out-btn" class="nav-btn" title="Zoom Out (-)">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+            </button>
+            <button id="zoom-reset-btn" class="zoom-value" title="Reset Zoom">
+              100%
+            </button>
+            <button id="zoom-in-btn" class="nav-btn" title="Zoom In (+)">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Loading Progress Bar -->
+        <div id="loading-bar-container">
+          <div id="loading-bar" class="hidden"></div>
         </div>
 
         <!-- Dashboard -->
@@ -459,7 +500,72 @@
               No custom shortcuts yet. Click "Add Shortcut" to create one.
             </p>
           </div>
-
+          <!-- Data Management -->
+          <div id="data-management-section">
+            <div id="data-management-header">
+              <h2>💾 Data Management</h2>
+            </div>
+            <div class="data-cards-grid">
+              <button
+                id="import-btn"
+                class="data-manage-btn"
+                title="Restore your settings and sessions"
+              >
+                <div
+                  class="data-icon"
+                  style="background: rgba(16, 185, 129, 0.1); color: #10b981"
+                >
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                  </svg>
+                </div>
+                <div class="data-text">
+                  <h3>Import Backup</h3>
+                  <span>Restore from JSON file</span>
+                </div>
+              </button>
+              <button
+                id="export-btn"
+                class="data-manage-btn"
+                title="Backup your current data"
+              >
+                <div
+                  class="data-icon"
+                  style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6"
+                >
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                  </svg>
+                </div>
+                <div class="data-text">
+                  <h3>Export Backup</h3>
+                  <span>Save all sessions & shortcuts</span>
+                </div>
+              </button>
+            </div>
+          </div>
           <div id="dashboard-footer">
             <p>
               💡 <strong>Tip:</strong> Each tab runs in a completely isolated
@@ -581,6 +687,31 @@
               Cancel
             </button>
             <button type="submit" class="btn-primary">Open</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Rename Session Modal -->
+    <div id="rename-modal-overlay" class="hidden">
+      <div id="rename-modal" class="modal">
+        <h3>Rename Session</h3>
+        <form id="rename-form">
+          <div class="form-group">
+            <label for="rename-input">Session Name</label>
+            <input
+              type="text"
+              id="rename-input"
+              placeholder="e.g. Toko Baju - Shopee"
+              required
+              autofocus
+            />
+          </div>
+          <div class="form-actions">
+            <button type="button" id="rename-cancel" class="btn-cancel">
+              Cancel
+            </button>
+            <button type="submit" class="btn-primary">Save Name</button>
           </div>
         </form>
       </div>

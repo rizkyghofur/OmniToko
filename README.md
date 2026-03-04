@@ -23,6 +23,12 @@ Login sessions are **saved and persist** across tab close/reopen:
 
 Branded home page with quick-access marketplace shortcuts: Shopee, Tokopedia, TikTok Shop, Lazada, Blibli, Bukalapak, Shopify, and custom URLs.
 
+### 🗂️ Session Control & Organization
+
+- **Reopen / Focus / Delete** controls for every session
+- **Session Groups**: Automatically categorizes active sessions by their storefront domain
+- **Session Rename**: Click ✎ to rename auto-generated sessions (e.g., "Shopee Seller" → "Toko Baju - Shopee")
+
 ### ⭐ Custom Shortcuts
 
 Add your own shortcuts with name, URL, custom color picker, and auto-fetched favicons.
@@ -61,6 +67,15 @@ Full right-click menu on web pages:
 - Automatic download handling with save dialog
 - Toast notifications with real-time progress bar
 - Completion/failure notifications with auto-dismiss
+
+### 🚀 Advanced Productivity
+
+- **System Tray**: App minimizes to tray instead of quitting, running silently in the background (Windows/Linux)
+- **Notification Badges**: Sidebar tabs show red notification counters dynamically parsed from website titles (e.g., `(2) New Orders`)
+- **Tab Reordering**: Use drag-and-drop on the sidebar tabs to customize your workspace layout
+- **Data Backup (Import/Export)**: Use the sidebar buttons to export or import all your shortcuts, sessions, and preferences directly to/from a JSON backup file
+- **Loading Bar**: Visual progress indicator in the navigation bar when pages are loading
+- **Zoom Controls**: UI buttons (+, -, Reset) in the navigation bar and keyboard shortcuts to scale store UI up or down
 
 ### 🖥️ Cross-Platform
 

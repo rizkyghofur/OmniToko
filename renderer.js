@@ -56,6 +56,19 @@ const sessionsEmpty = document.getElementById("sessions-empty");
 // Theme DOM
 const themeCheckbox = document.getElementById("theme-checkbox");
 
+// Advanced Features DOM
+const exportBtn = document.getElementById("export-btn");
+const importBtn = document.getElementById("import-btn");
+const loadingBar = document.getElementById("loading-bar");
+const zoomInBtn = document.getElementById("zoom-in-btn");
+const zoomOutBtn = document.getElementById("zoom-out-btn");
+const zoomResetBtn = document.getElementById("zoom-reset-btn");
+const renameModalOverlay = document.getElementById("rename-modal-overlay");
+const renameForm = document.getElementById("rename-form");
+const renameInput = document.getElementById("rename-input");
+const renameCancel = document.getElementById("rename-cancel");
+let currentRenameSessionId = null;
+
 // --- Initialization ---
 
 function init() {
@@ -128,6 +141,9 @@ function init() {
     const tab = tabs.find((t) => t.id === tabId);
     if (tab) {
       tab.title = title;
+      // Parse notification count: "(1) Shopee Seller" -> regex
+      const badgeMatch = title.match(/^\((\d+)\)/);
+      tab.badgeCount = badgeMatch ? parseInt(badgeMatch[1], 10) : 0;
       updateSidebarTab(tabId);
     }
   });
@@ -137,6 +153,26 @@ function init() {
     if (tab) {
       tab.isLoading = isLoading;
       updateSidebarTab(tabId);
+    }
+
+    // Global Loading Bar
+    if (activeTabId === tabId) {
+      if (isLoading) {
+        loadingBar.classList.remove("hidden");
+        loadingBar.style.width = "30%";
+        setTimeout(() => {
+          if (!loadingBar.classList.contains("hidden"))
+            loadingBar.style.width = "70%";
+        }, 500);
+      } else {
+        loadingBar.style.width = "100%";
+        setTimeout(() => {
+          loadingBar.classList.add("hidden");
+          setTimeout(() => {
+            loadingBar.style.width = "0%";
+          }, 300);
+        }, 300);
+      }
     }
   });
 
@@ -243,6 +279,72 @@ function init() {
   window.omniAPI.onDownloadFailed(({ id, fileName }) => {
     updateDownloadToast(id, `❌ Failed: ${fileName}`, 0);
     setTimeout(() => removeDownloadToast(id), 4000);
+  });
+
+  // --- Zoom Controls ---
+  zoomInBtn.addEventListener("click", () => {
+    if (activeTabId) window.omniAPI.zoomIn(activeTabId); // We'll add zoom IPC or handle via input simulation
+  });
+  zoomOutBtn.addEventListener("click", () => {
+    if (activeTabId) window.omniAPI.zoomOut(activeTabId);
+  });
+  zoomResetBtn.addEventListener("click", () => {
+    if (activeTabId) window.omniAPI.zoomReset(activeTabId);
+  });
+
+  // --- Rename Modal ---
+  renameCancel.addEventListener("click", () => {
+    renameModalOverlay.classList.add("hidden");
+    currentRenameSessionId = null;
+  });
+  renameModalOverlay.addEventListener("click", (e) => {
+    if (e.target === renameModalOverlay) {
+      renameModalOverlay.classList.add("hidden");
+      currentRenameSessionId = null;
+    }
+  });
+  renameForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (currentRenameSessionId) {
+      await window.omniAPI.renameSession({
+        sessionId: currentRenameSessionId,
+        newName: renameInput.value.trim() || "Unnamed",
+      });
+      renameModalOverlay.classList.add("hidden");
+      currentRenameSessionId = null;
+      loadSessions();
+
+      // Also update open tab title if active
+      const activeTab = tabs.find(
+        (t) => t.sessionId === currentRenameSessionId,
+      );
+      if (activeTab) {
+        activeTab.name = renameInput.value.trim();
+        updateSidebarTab(activeTab.id);
+      }
+    }
+  });
+
+  // --- Import / Export ---
+  exportBtn.addEventListener("click", async () => {
+    const success = await window.omniAPI.exportData();
+    if (success)
+      showDownloadToast("export", "✅ Backup exported successfully!", 100);
+    setTimeout(() => removeDownloadToast("export"), 3000);
+  });
+
+  importBtn.addEventListener("click", async () => {
+    if (
+      confirm(
+        "Importing data will overwrite current sessions and shortcuts. Proceed?",
+      )
+    ) {
+      const success = await window.omniAPI.importData();
+      if (success) {
+        showDownloadToast("import", "✅ Data imported! Reloading...", 100);
+        setTimeout(() => location.reload(), 1500);
+      }
+    }
   });
 
   // Load data
@@ -501,25 +603,87 @@ function hideDashboard() {
   navBar.classList.remove("hidden");
 }
 
-// --- Sidebar Tab Management ---
+// --- Sidebar Tab Management with Drag and Drop ---
+
+let draggedTabId = null;
 
 function renderSidebarTab(tab) {
   const el = document.createElement("div");
   el.className = "sidebar-tab";
   el.id = `sidebar-tab-${tab.id}`;
+  el.setAttribute("draggable", "true");
+
+  const badgeHtml =
+    tab.badgeCount > 0
+      ? `<span class="tab-badge">${tab.badgeCount}</span>`
+      : "";
+
   el.innerHTML = `
     <span class="sidebar-tab-dot" style="background-color: ${tab.color};"></span>
-    <span class="sidebar-tab-title">${tab.name}</span>
+    <span class="sidebar-tab-title">${escapeHtml(tab.name)}</span>
+    ${badgeHtml}
     <button class="sidebar-tab-close" title="Close tab">&times;</button>
   `;
+
   el.addEventListener("click", (e) => {
     if (!e.target.classList.contains("sidebar-tab-close")) setActiveTab(tab.id);
   });
+
   el.querySelector(".sidebar-tab-close").addEventListener("click", (e) => {
     e.stopPropagation();
     closeTab(tab.id);
   });
+
+  // Drag and Drop Logic
+  el.addEventListener("dragstart", (e) => {
+    draggedTabId = tab.id;
+    e.dataTransfer.effectAllowed = "move";
+    el.style.opacity = "0.5";
+  });
+
+  el.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (draggedTabId !== tab.id) el.classList.add("drag-over");
+  });
+
+  el.addEventListener("dragleave", () => {
+    el.classList.remove("drag-over");
+  });
+
+  el.addEventListener("dragend", () => {
+    el.style.opacity = "1";
+    document
+      .querySelectorAll(".sidebar-tab")
+      .forEach((t) => t.classList.remove("drag-over"));
+  });
+
+  el.addEventListener("drop", (e) => {
+    e.preventDefault();
+    el.classList.remove("drag-over");
+    if (draggedTabId && draggedTabId !== tab.id) {
+      // Reorder in array
+      const fromIdx = tabs.findIndex((t) => t.id === draggedTabId);
+      const toIdx = tabs.findIndex((t) => t.id === tab.id);
+
+      if (fromIdx !== -1 && toIdx !== -1) {
+        const [movedTab] = tabs.splice(fromIdx, 1);
+        tabs.splice(toIdx, 0, movedTab);
+        reRenderSidebar();
+      }
+    }
+  });
+
   sidebarTabs.appendChild(el);
+}
+
+function reRenderSidebar() {
+  sidebarTabs.innerHTML = "";
+  tabs.forEach((tab) => renderSidebarTab(tab));
+  if (activeTabId) {
+    const el = document.getElementById(`sidebar-tab-${activeTabId}`);
+    if (el) el.classList.add("active");
+  }
 }
 
 function updateSidebarTab(tabId) {
@@ -531,6 +695,20 @@ function updateSidebarTab(tabId) {
     let displayTitle = tab.title || tab.name;
     if (tab.isLoading) displayTitle = "⏳ " + displayTitle;
     titleEl.textContent = displayTitle;
+
+    // Update Badge
+    let badgeEl = el.querySelector(".tab-badge");
+    if (tab.badgeCount > 0) {
+      if (!badgeEl) {
+        badgeEl = document.createElement("span");
+        badgeEl.className = "tab-badge";
+        // insert before the close button
+        el.insertBefore(badgeEl, el.querySelector(".sidebar-tab-close"));
+      }
+      badgeEl.textContent = tab.badgeCount;
+    } else if (badgeEl) {
+      badgeEl.remove();
+    }
   }
 }
 

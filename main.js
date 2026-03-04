@@ -6,6 +6,8 @@ const {
   session,
   globalShortcut,
   Menu,
+  Tray,
+  nativeImage,
   dialog,
 } = require("electron");
 const path = require("path");
@@ -13,8 +15,10 @@ const fs = require("fs");
 
 let mainWindow;
 let uiView;
+let tray;
 let views = {};
 let activeTabId = null;
+let isQuitting = false;
 
 const isMac = process.platform === "darwin";
 const SIDEBAR_WIDTH = 220;
@@ -60,6 +64,13 @@ function createWindow() {
     }
   });
 
+  mainWindow.on("close", (event) => {
+    if (!isQuitting) {
+      event.preventDefault();
+      mainWindow.hide();
+    }
+  });
+
   mainWindow.on("closed", () => {
     mainWindow = null;
   });
@@ -69,6 +80,40 @@ function createWindow() {
 
   // --- Application Menu with Shortcuts ---
   setupAppMenu();
+
+  // --- Setup Tray ---
+  setupTray();
+}
+
+function setupTray() {
+  let trayIcon = nativeImage.createFromPath(iconPath);
+
+  // Resize icon to fit system tray (usually 16x16 on Mac/Linux, 32x32 on Windows)
+  const iconSize = isMac ? 16 : 32;
+  trayIcon = trayIcon.resize({ width: iconSize, height: iconSize });
+
+  tray = new Tray(trayIcon);
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: "Show OmniToko",
+      click: () => {
+        if (mainWindow) mainWindow.show();
+      },
+    },
+    { type: "separator" },
+    {
+      label: "Quit",
+      click: () => {
+        isQuitting = true;
+        app.quit();
+      },
+    },
+  ]);
+  tray.setToolTip("OmniToko");
+  tray.setContextMenu(contextMenu);
+  tray.on("click", () => {
+    if (mainWindow) mainWindow.show();
+  });
 }
 
 // --- Keyboard Shortcuts ---
@@ -205,11 +250,16 @@ app.whenReady().then(() => {
   createWindow();
   app.on("activate", () => {
     if (!mainWindow) createWindow();
+    else mainWindow.show();
   });
 });
 
+app.on("before-quit", () => {
+  isQuitting = true;
+});
+
 app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") app.quit();
+  // Do nothing, let it run in background/tray
 });
 
 // --- Tab Management ---
@@ -580,6 +630,16 @@ ipcMain.handle(
   },
 );
 
+ipcMain.handle("rename-session", (event, { sessionId, newName }) => {
+  const sessions = readJSON(sessionsPath(), []);
+  const idx = sessions.findIndex((s) => s.sessionId === sessionId);
+  if (idx >= 0) {
+    sessions[idx].name = newName;
+    writeJSON(sessionsPath(), sessions);
+  }
+  return sessions;
+});
+
 ipcMain.handle("remove-session", (event, sessionId) => {
   const sessions = readJSON(sessionsPath(), []).filter(
     (s) => s.sessionId !== sessionId,
@@ -605,4 +665,49 @@ ipcMain.handle("set-theme", (event, theme) => {
   prefs.theme = theme;
   writeJSON(prefsPath(), prefs);
   return theme;
+});
+
+// --- Import/Export ---
+
+ipcMain.handle("export-data", async () => {
+  const { filePath } = await dialog.showSaveDialog(mainWindow, {
+    title: "Export OmniToko Data",
+    defaultPath: "omnitoko_backup.json",
+    filters: [{ name: "JSON", extensions: ["json"] }],
+  });
+
+  if (!filePath) return false;
+
+  const data = {
+    shortcuts: readJSON(shortcutsPath(), []),
+    sessions: readJSON(sessionsPath(), []),
+    preferences: readJSON(prefsPath(), {}),
+  };
+
+  try {
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+    return true;
+  } catch (e) {
+    return false;
+  }
+});
+
+ipcMain.handle("import-data", async () => {
+  const { filePaths } = await dialog.showOpenDialog(mainWindow, {
+    title: "Import OmniToko Data",
+    filters: [{ name: "JSON", extensions: ["json"] }],
+    properties: ["openFile"],
+  });
+
+  if (!filePaths || filePaths.length === 0) return false;
+
+  try {
+    const data = JSON.parse(fs.readFileSync(filePaths[0], "utf-8"));
+    if (data.shortcuts) writeJSON(shortcutsPath(), data.shortcuts);
+    if (data.sessions) writeJSON(sessionsPath(), data.sessions);
+    if (data.preferences) writeJSON(prefsPath(), data.preferences);
+    return true;
+  } catch (e) {
+    return false;
+  }
 });
