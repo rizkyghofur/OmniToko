@@ -25,6 +25,11 @@ contextBridge.exposeInMainWorld("omniAPI", {
   goBack: (tabId) => ipcRenderer.invoke("go-back", tabId),
   goForward: (tabId) => ipcRenderer.invoke("go-forward", tabId),
   reload: (tabId) => ipcRenderer.invoke("reload", tabId),
+  zoomIn: (tabId) => ipcRenderer.invoke("zoom-in", tabId),
+  zoomOut: (tabId) => ipcRenderer.invoke("zoom-out", tabId),
+
+  // Layout Controls
+  setLayout: (layout) => ipcRenderer.invoke("set-layout", layout),
 
   // Listeners — Tab events
   onUrlUpdated: (cb) => ipcRenderer.on("url-updated", (e, d) => cb(d)),

@@ -19,6 +19,7 @@ let tray;
 let views = {};
 let activeTabId = null;
 let isQuitting = false;
+let currentLayout = "left"; // Track layout state in main process
 
 const isMac = process.platform === "darwin";
 const SIDEBAR_WIDTH = 220;
@@ -57,14 +58,7 @@ function createWindow() {
   mainWindow.on("resize", () => {
     const { width, height } = mainWindow.getContentBounds();
     uiView.setBounds({ x: 0, y: 0, width, height });
-    if (activeTabId && views[activeTabId]) {
-      views[activeTabId].setBounds({
-        x: SIDEBAR_WIDTH,
-        y: NAV_HEIGHT,
-        width: width - SIDEBAR_WIDTH,
-        height: height - NAV_HEIGHT,
-      });
-    }
+    resizeActiveTab();
   });
 
   mainWindow.on("close", (event) => {
@@ -328,6 +322,28 @@ ipcMain.handle("create-tab", (event, { tabId, url, sessionId }) => {
   return true;
 });
 
+function resizeActiveTab() {
+  if (!activeTabId || !views[activeTabId]) return;
+  const { width, height } = mainWindow.getContentBounds();
+
+  if (currentLayout === "top") {
+    const topBarHeight = isMac ? 106 : 64; // 48 nav bar + 58 sidebar row
+    views[activeTabId].setBounds({
+      x: 0,
+      y: topBarHeight,
+      width: width,
+      height: height - topBarHeight,
+    });
+  } else {
+    views[activeTabId].setBounds({
+      x: SIDEBAR_WIDTH,
+      y: NAV_HEIGHT,
+      width: width - SIDEBAR_WIDTH,
+      height: height - NAV_HEIGHT,
+    });
+  }
+}
+
 function switchTab(tabId) {
   if (tabId === "__none__") {
     for (const [id, view] of Object.entries(views)) {
@@ -341,13 +357,10 @@ function switchTab(tabId) {
   for (const [id, view] of Object.entries(views)) {
     if (id !== tabId) view.setBounds({ x: 0, y: 0, width: 0, height: 0 });
   }
-  views[tabId].setBounds({
-    x: SIDEBAR_WIDTH,
-    y: NAV_HEIGHT,
-    width: width - SIDEBAR_WIDTH,
-    height: height - NAV_HEIGHT,
-  });
+
   activeTabId = tabId;
+  resizeActiveTab();
+
   if (uiView && !uiView.webContents.isDestroyed()) {
     const currentUrl = views[tabId].webContents.getURL();
     uiView.webContents.send("url-updated", { tabId, url: currentUrl });
@@ -362,6 +375,14 @@ ipcMain.handle("close-tab", (event, tabId) => {
     views[tabId].webContents.close();
     delete views[tabId];
     if (activeTabId === tabId) activeTabId = null;
+  }
+});
+
+ipcMain.handle("set-layout", (event, layout) => {
+  currentLayout = layout;
+  // Trigger a resize to apply immediately
+  if (mainWindow) {
+    mainWindow.emit("resize");
   }
 });
 

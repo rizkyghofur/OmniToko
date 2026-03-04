@@ -59,10 +59,9 @@ const themeCheckbox = document.getElementById("theme-checkbox");
 // Advanced Features DOM
 const exportBtn = document.getElementById("export-btn");
 const importBtn = document.getElementById("import-btn");
-const loadingBar = document.getElementById("loading-bar");
 const zoomInBtn = document.getElementById("zoom-in-btn");
 const zoomOutBtn = document.getElementById("zoom-out-btn");
-const zoomResetBtn = document.getElementById("zoom-reset-btn");
+const layoutToggleBtn = document.getElementById("layout-toggle-btn");
 const renameModalOverlay = document.getElementById("rename-modal-overlay");
 const renameForm = document.getElementById("rename-form");
 const renameInput = document.getElementById("rename-input");
@@ -155,25 +154,28 @@ function init() {
       updateSidebarTab(tabId);
     }
 
-    // Global Loading Bar
-    if (activeTabId === tabId) {
-      if (isLoading) {
-        loadingBar.classList.remove("hidden");
-        loadingBar.style.width = "30%";
-        setTimeout(() => {
-          if (!loadingBar.classList.contains("hidden"))
-            loadingBar.style.width = "70%";
-        }, 500);
-      } else {
-        loadingBar.style.width = "100%";
-        setTimeout(() => {
-          loadingBar.classList.add("hidden");
-          setTimeout(() => {
-            loadingBar.style.width = "0%";
-          }, 300);
-        }, 300);
-      }
-    }
+    // Global Loading Bar logic was removed
+  });
+
+  // Zoom controls
+  zoomInBtn.addEventListener("click", () => {
+    if (activeTabId) window.omniAPI.zoomIn(activeTabId);
+  });
+  zoomOutBtn.addEventListener("click", () => {
+    if (activeTabId) window.omniAPI.zoomOut(activeTabId);
+  });
+
+  // Layout toggle
+  const currentLayout = localStorage.getItem("omni-layout") || "left";
+  if (currentLayout === "top") document.body.classList.add("layout-top");
+  window.omniAPI.setLayout(currentLayout);
+
+  layoutToggleBtn.addEventListener("click", () => {
+    const isTop = document.body.classList.toggle("layout-top");
+    const newLayout = isTop ? "top" : "left";
+    localStorage.setItem("omni-layout", newLayout);
+    window.omniAPI.setLayout(newLayout);
+    reRenderSidebar();
   });
 
   // Platform
