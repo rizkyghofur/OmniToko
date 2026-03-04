@@ -6,6 +6,18 @@ Built with [Electron.js](https://www.electronjs.org/).
 
 ---
 
+### 📸 Application Preview
+
+<p align="center">
+  <img src="screenshots/1.png" width="800" alt="OmniToko Dashboard">
+</p>
+<p align="center">
+  <img src="screenshots/2.png" width="400" alt="Session when has Login in Shopee">
+  <img src="screenshots/3.png" width="400" alt="Session when has no Login in Shopee">
+</p>
+
+---
+
 ## ✨ Features
 
 ### 🔐 Session Isolation

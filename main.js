@@ -25,6 +25,9 @@ const SIDEBAR_WIDTH = 220;
 const NAV_HEIGHT = 48;
 const iconPath = path.join(__dirname, "assets", "icon", "icon.png");
 
+// Ensure the app name is correct in the OS (e.g., macOS Dock & Application Menu)
+app.setName("OmniToko");
+
 function createWindow() {
   mainWindow = new BaseWindow({
     width: 1280,
@@ -247,6 +250,10 @@ function zoomActiveTab(delta, reset = false) {
 }
 
 app.whenReady().then(() => {
+  if (isMac) {
+    app.dock.setIcon(nativeImage.createFromPath(iconPath));
+  }
+
   createWindow();
   app.on("activate", () => {
     if (!mainWindow) createWindow();
