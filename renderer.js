@@ -84,6 +84,42 @@ let currentSettingsSessionId = null;
 // --- Initialization ---
 
 function init() {
+  // Inject Dynamic Favicons for Marketplace Cards
+  marketplaceCards.forEach((card) => {
+    const url = card.dataset.url;
+    const iconContainer = card.querySelector(".card-icon");
+    if (url && iconContainer) {
+      try {
+        const u = new URL(url);
+        // Mengambil domain utama (root domain) dengan mengambil 2 atau 3 kata terakhir berdasarkan ekstensi ccTLD
+        const parts = u.hostname.split(".");
+        let domain = u.hostname;
+        if (parts.length > 2) {
+          // Menangani domain dengan country code spt .co.id, .com.au
+          if (
+            parts[parts.length - 2] === "co" ||
+            parts[parts.length - 2] === "com" ||
+            parts[parts.length - 2] === "web"
+          ) {
+            domain = parts.slice(-3).join(".");
+          } else {
+            domain = parts.slice(-2).join(".");
+          }
+        }
+        const faviconUrl = `https://www.google.com/s2/favicons?sz=128&domain=${domain}`;
+
+        // Remove the hardcoded gradient background from the container
+        iconContainer.style.background = "transparent";
+
+        // Inject the dynamic favicon without enforcing a white background block
+        iconContainer.innerHTML = `<img src="${faviconUrl}" width="32" height="32" style="object-fit: contain;" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+          <svg style="display:none;" width="32" height="32" viewBox="0 0 24 24" fill="white">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-9l6 4.5-6 4.5z"/>
+          </svg>`;
+      } catch (e) {}
+    }
+  });
+
   // Marketplace cards → create tab with session
   marketplaceCards.forEach((card) => {
     card.addEventListener("click", () => {
@@ -152,11 +188,32 @@ function init() {
   window.omniAPI.onTitleUpdated(({ tabId, title }) => {
     const tab = tabs.find((t) => t.id === tabId);
     if (tab) {
-      tab.title = title;
+      if (!tab.isRenamedManually) {
+        tab.title = title;
+      }
       // Parse notification count: "(1) Shopee Seller" -> regex
       const badgeMatch = title.match(/^\((\d+)\)/);
       tab.badgeCount = badgeMatch ? parseInt(badgeMatch[1], 10) : 0;
       updateSidebarTab(tabId);
+    }
+  });
+
+  window.omniAPI.onFaviconUpdated(({ tabId, favicon }) => {
+    const tab = tabs.find((t) => t.id === tabId);
+    if (tab) {
+      if (tab.favicon !== favicon) {
+        tab.favicon = favicon;
+        if (tab.sessionId) {
+          window.omniAPI.saveSession({
+            sessionId: tab.sessionId,
+            name: tab.name,
+            url: tab.url,
+            color: tab.color,
+            favicon: favicon,
+          });
+          loadSessions();
+        }
+      }
     }
   });
 
@@ -282,17 +339,17 @@ function init() {
 
   // --- Download Notifications ---
   window.omniAPI.onDownloadStarted(({ id, fileName }) => {
-    showDownloadToast(id, `⬇️ Downloading: ${fileName}`, 0);
+    showDownloadToast(id, `⬇️ Mengunduh: ${fileName}`, 0);
   });
   window.omniAPI.onDownloadProgress(({ id, fileName, percent }) => {
     updateDownloadToast(id, `⬇️ ${fileName} — ${percent}%`, percent);
   });
   window.omniAPI.onDownloadComplete(({ id, fileName }) => {
-    updateDownloadToast(id, `✅ Downloaded: ${fileName}`, 100);
+    updateDownloadToast(id, `✅ Terunduh: ${fileName}`, 100);
     setTimeout(() => removeDownloadToast(id), 4000);
   });
   window.omniAPI.onDownloadFailed(({ id, fileName }) => {
-    updateDownloadToast(id, `❌ Failed: ${fileName}`, 0);
+    updateDownloadToast(id, `❌ Gagal: ${fileName}`, 0);
     setTimeout(() => removeDownloadToast(id), 4000);
   });
 
@@ -340,7 +397,9 @@ function init() {
       sessionSettingsModalOverlay.classList.add("hidden");
       currentSettingsSessionId = null;
       loadSessions();
-      alert("Settings saved. Reopen the session to apply changes.");
+      alert(
+        "Pengaturan disimpan. Buka kembali sesi untuk menerapkan perubahan.",
+      );
     }
   });
 
@@ -349,41 +408,61 @@ function init() {
     if (currentRenameSessionId) {
       await window.omniAPI.renameSession({
         sessionId: currentRenameSessionId,
-        newName: renameInput.value.trim() || "Unnamed",
+        newName: renameInput.value.trim() || "Tanpa Nama",
       });
-      renameModalOverlay.classList.add("hidden");
-      currentRenameSessionId = null;
-      loadSessions();
-
       // Also update open tab title if active
       const activeTab = tabs.find(
         (t) => t.sessionId === currentRenameSessionId,
       );
       if (activeTab) {
         activeTab.name = renameInput.value.trim();
+        // Update the tab title variable as well so it doesn't get overwritten
+        activeTab.title = renameInput.value.trim();
+        activeTab.isRenamedManually = true;
         updateSidebarTab(activeTab.id);
+
+        // Ensure the session is saved with the new name and current URL
+        await window.omniAPI.saveSession({
+          sessionId: activeTab.sessionId,
+          name: activeTab.name,
+          url: activeTab.url,
+          color: activeTab.color,
+        });
       }
+
+      renameModalOverlay.classList.add("hidden");
+      currentRenameSessionId = null;
+      loadSessions();
     }
   });
 
   // --- Import / Export ---
   exportBtn.addEventListener("click", async () => {
     const success = await window.omniAPI.exportData();
-    if (success)
-      showDownloadToast("export", "✅ Backup exported successfully!", 100);
+    if (success) {
+      showDownloadToast("export", "✅ Cadangan berhasil disimpan!", 100);
+    } else {
+      showDownloadToast("export", "❌ Gagal mengekspor cadangan.", 0);
+    }
     setTimeout(() => removeDownloadToast("export"), 3000);
   });
 
   importBtn.addEventListener("click", async () => {
     if (
       confirm(
-        "Importing data will overwrite current sessions and shortcuts. Proceed?",
+        "Mengimpor data akan menimpa sesi dan pintasan saat ini. Lanjutkan?",
       )
     ) {
       const success = await window.omniAPI.importData();
       if (success) {
-        showDownloadToast("import", "✅ Data imported! Reloading...", 100);
+        showDownloadToast(
+          "import",
+          "✅ Data berhasil dipulihkan! Memuat ulang...",
+          100,
+        );
         setTimeout(() => location.reload(), 1500);
+      } else {
+        alert("Gagal mengimpor data. Pastikan file cadangan valid.");
       }
     }
   });
@@ -430,44 +509,45 @@ function renderSessions(sessions) {
     }
     const initial = (s.name || "?").charAt(0).toUpperCase();
     const faviconHtml = faviconUrl
-      ? `<img class="session-favicon" src="${faviconUrl}" width="24" height="24" onerror="this.outerHTML='<span class=session-initial style=background:${encodeURIComponent(s.color || "#8B5CF6")}>${initial}</span>'">`
+      ? `<img class="session-favicon" src="${faviconUrl}" width="24" height="24" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'">
+         <span class="session-initial" style="display:none; background:${s.color || "#8B5CF6"}">${initial}</span>`
       : `<span class="session-initial" style="background:${s.color || "#8B5CF6"}">${initial}</span>`;
 
     card.innerHTML = `
       <div class="session-color-bar" style="background: ${s.color};"></div>
-      <div class="session-info">
+      <div class="session-info" data-tooltip="${escapeHtml(s.name)}">
         <div class="session-name">
           ${faviconHtml}
           <strong>${escapeHtml(s.name)}</strong>
-          ${isOpen ? '<span class="session-live">● Active</span>' : ""}
+          ${isOpen ? '<span class="session-live">● Aktif</span>' : ""}
         </div>
         <div class="session-url">${escapeHtml(truncateUrl(s.url))}</div>
       </div>
       <div class="session-actions">
         ${
           isOpen
-            ? '<button class="session-btn session-focus" title="Switch to tab">Focus</button>'
-            : '<button class="session-btn session-reopen" title="Reopen with saved login">Reopen</button>'
+            ? '<button class="session-btn session-focus" title="Pindah ke tab">Fokus</button>'
+            : '<button class="session-btn session-reopen" title="Buka kembali dengan login tersimpan">Buka</button>'
         }
         
         <!-- Advanced Options Dropdown -->
         <div class="dropdown-container">
-          <button class="dropdown-btn" title="Advanced Options">⋮</button>
+          <button class="dropdown-btn" title="Opsi Lanjutan">⋮</button>
           <div class="dropdown-menu">
             <button class="dropdown-item session-settings-btn">
               <span>⚙️</span> Proxy & User-Agent
             </button>
             <button class="dropdown-item session-duplicate-btn">
-              <span>🔄</span> Duplicate Session
+              <span>🔄</span> Duplikat Sesi
             </button>
             <button class="dropdown-item session-rename-btn">
-              <span>✎</span> Rename
+              <span>✎</span> Ubah Nama
             </button>
             <button class="dropdown-item session-clear-btn danger">
-              <span>🧹</span> Clear Cookies
+              <span>🧹</span> Hapus Cookie
             </button>
             <button class="dropdown-item session-delete-btn danger">
-              <span>🗑️</span> Delete Session
+              <span>🗑️</span> Hapus Sesi
             </button>
           </div>
         </div>
@@ -497,11 +577,39 @@ function renderSessions(sessions) {
     if (dropdownBtn && dropdownMenu) {
       dropdownBtn.addEventListener("click", (e) => {
         e.stopPropagation();
+
+        const isShowing = dropdownMenu.classList.contains("show");
+
         // Close all other dropdowns
         document.querySelectorAll(".dropdown-menu").forEach((el) => {
-          if (el !== dropdownMenu) el.classList.remove("show");
+          el.classList.remove("show");
+          el.style.top = "";
+          el.style.left = "";
+          el.style.bottom = "";
         });
-        dropdownMenu.classList.toggle("show");
+
+        if (!isShowing) {
+          dropdownMenu.classList.add("show");
+
+          // Calculate fixed position
+          const rect = dropdownBtn.getBoundingClientRect();
+          const menuRect = dropdownMenu.getBoundingClientRect();
+
+          let topPosition = rect.bottom + 6;
+
+          // If it goes off the bottom of the screen, show above
+          if (topPosition + menuRect.height > window.innerHeight) {
+            topPosition = rect.top - menuRect.height - 6;
+            dropdownMenu.style.transformOrigin = "bottom right";
+          } else {
+            dropdownMenu.style.transformOrigin = "top right";
+          }
+
+          dropdownMenu.style.top = `${topPosition}px`;
+
+          // Align right edge of menu with right edge of button
+          dropdownMenu.style.left = `${rect.right - menuRect.width}px`;
+        }
       });
     }
 
@@ -532,7 +640,7 @@ function renderSessions(sessions) {
       duplicateBtn.addEventListener("click", (e) => {
         e.stopPropagation();
         dropdownMenu.classList.remove("show");
-        createSessionTab(s.url, s.name + " (Copy)", s.color, s.sessionId);
+        createSessionTab(s.url, s.name + " (Salinan)", s.color, s.sessionId);
       });
     }
 
@@ -543,11 +651,11 @@ function renderSessions(sessions) {
         dropdownMenu.classList.remove("show");
         if (
           confirm(
-            `Are you sure you want to clear cookies for "${s.name}"?\nYou will be logged out!`,
+            `Apakah Anda yakin ingin menghapus cookie untuk "${s.name}"?\nAnda akan log keluar!`,
           )
         ) {
           await window.omniAPI.clearSessionData(s.sessionId);
-          alert("Cookies cleared successfully.");
+          alert("Cookie berhasil dihapus.");
         }
       });
     }
@@ -558,7 +666,7 @@ function renderSessions(sessions) {
       deleteBtn.addEventListener("click", async (e) => {
         e.stopPropagation();
         dropdownMenu.classList.remove("show");
-        if (confirm(`Delete session "${s.name}" permanently?`)) {
+        if (confirm(`Hapus sesi "${s.name}" secara permanen?`)) {
           await window.omniAPI.removeSession(s.sessionId);
           loadSessions();
         }
@@ -570,9 +678,11 @@ function renderSessions(sessions) {
 
   // Close dropdowns when clicking outside
   document.addEventListener("click", () => {
-    document
-      .querySelectorAll(".dropdown-menu")
-      .forEach((el) => el.classList.remove("show"));
+    document.querySelectorAll(".dropdown-menu").forEach((el) => {
+      el.classList.remove("show");
+      el.style.top = "";
+      el.style.left = "";
+    });
   });
 }
 
@@ -593,8 +703,8 @@ async function createSessionTab(url, name, color, existingSessionId) {
   const newTab = {
     id: newTabId,
     url,
-    title: name || "Loading...",
-    name: name || "New Tab",
+    title: name || "Memuat...",
+    name: name || "Tab Baru",
     isLoading: true,
     color: color || MARKETPLACE_COLORS.default,
     sessionId,
@@ -661,7 +771,7 @@ function renderUserShortcuts(shortcuts) {
         <h3>${escapeHtml(sc.name)}</h3>
         <span>${escapeHtml(sc.url)}</span>
       </div>
-      <button class="shortcut-delete" title="Remove shortcut">&times;</button>
+      <button class="shortcut-delete" title="Hapus pintasan">&times;</button>
     `;
 
     card.addEventListener("click", (e) => {
@@ -756,6 +866,7 @@ function renderSidebarTab(tab) {
   el.className = "sidebar-tab";
   el.id = `sidebar-tab-${tab.id}`;
   el.setAttribute("draggable", "true");
+  el.dataset.tooltip = tab.name;
 
   const badgeHtml =
     tab.badgeCount > 0
@@ -839,6 +950,7 @@ function updateSidebarTab(tabId) {
     let displayTitle = tab.title || tab.name;
     if (tab.isLoading) displayTitle = "⏳ " + displayTitle;
     titleEl.textContent = displayTitle;
+    el.dataset.tooltip = tab.name;
 
     // Update Badge
     let badgeEl = el.querySelector(".tab-badge");
@@ -964,3 +1076,40 @@ function removeDownloadToast(id) {
 
 // Boot
 document.addEventListener("DOMContentLoaded", init);
+
+// Custom Tooltip Logic
+const customTooltip = document.getElementById("custom-tooltip");
+if (customTooltip) {
+  document.addEventListener("mousemove", (e) => {
+    const target = e.target.closest("[data-tooltip]");
+    if (target) {
+      const titleText = target.dataset.tooltip;
+      if (titleText) {
+        customTooltip.textContent = titleText;
+        customTooltip.classList.add("show");
+
+        const offset = 15;
+        let left = e.clientX + offset;
+        let top = e.clientY + offset;
+
+        // Bounds checking
+        const rect = customTooltip.getBoundingClientRect();
+        if (left + rect.width > window.innerWidth) {
+          left = e.clientX - rect.width - offset;
+        }
+        if (top + rect.height > window.innerHeight) {
+          top = e.clientY - rect.height - offset;
+        }
+
+        customTooltip.style.left = left + "px";
+        customTooltip.style.top = top + "px";
+      }
+    } else {
+      customTooltip.classList.remove("show");
+    }
+  });
+
+  document.addEventListener("mouseleave", () => {
+    customTooltip.classList.remove("show");
+  });
+}

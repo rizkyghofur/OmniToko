@@ -1,5 +1,5 @@
 {
-  "name": "omnitoko",
+  "name": "oasis",
   "version": "1.0.0",
   "description": "Multi-session e-commerce store manager with isolated login sessions",
   "main": "main.js",
@@ -11,8 +11,8 @@
     "build:linux": "electron-builder --linux"
   },
   "build": {
-    "appId": "com.omnitoko.app",
-    "productName": "OmniToko",
+    "appId": "com.oasis.app",
+    "productName": "OASIS",
     "files": [
       "main.js",
       "preload.js",

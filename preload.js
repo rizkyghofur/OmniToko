@@ -35,6 +35,10 @@ contextBridge.exposeInMainWorld("omniAPI", {
   // Layout Controls
   setLayout: (layout) => ipcRenderer.invoke("set-layout", layout),
 
+  // Data Management
+  exportData: () => ipcRenderer.invoke("export-data"),
+  importData: () => ipcRenderer.invoke("import-data"),
+
   // Listeners — Tab events
   onUrlUpdated: (cb) => ipcRenderer.on("url-updated", (e, d) => cb(d)),
   onTitleUpdated: (cb) => ipcRenderer.on("title-updated", (e, d) => cb(d)),
@@ -55,6 +59,9 @@ contextBridge.exposeInMainWorld("omniAPI", {
   // Listeners — Context menu
   onOpenLinkNewTab: (cb) =>
     ipcRenderer.on("open-link-new-tab", (e, d) => cb(d)),
+
+  // Listeners — Dynamic Icons
+  onFaviconUpdated: (cb) => ipcRenderer.on("favicon-updated", (e, d) => cb(d)),
 
   // Listeners — Downloads
   onDownloadStarted: (cb) =>

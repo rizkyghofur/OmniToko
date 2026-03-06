@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>OmniToko</title>
+    <title>OASIS</title>
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
@@ -16,28 +16,25 @@
       <aside id="sidebar">
         <div id="sidebar-brand">
           <div id="brand-icon">
-            <svg
+            <img
+              src="assets/icon/icon.png"
               width="28"
               height="28"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="white"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-              <polyline points="9 22 9 12 15 12 15 22"></polyline>
-            </svg>
+              alt="OASIS Logo"
+            />
           </div>
-          <span id="brand-name">OmniToko</span>
+          <span
+            id="brand-name"
+            title="Omnichannel Access System for Integrated Stores"
+            >OASIS</span
+          >
         </div>
 
         <div id="sidebar-tabs">
           <!-- Dynamically populated tabs -->
         </div>
 
-        <button id="add-tab-btn" title="Open New Store Tab">
+        <button id="add-tab-btn" title="Buka Tab Toko Baru">
           <svg
             width="16"
             height="16"
@@ -51,7 +48,7 @@
             <line x1="12" y1="5" x2="12" y2="19"></line>
             <line x1="5" y1="12" x2="19" y2="12"></line>
           </svg>
-          <span>New Store Tab</span>
+          <span>Tab Toko Baru</span>
         </button>
 
         <!-- Sidebar Footer Actions -->
@@ -99,7 +96,7 @@
           </div>
 
           <!-- Layout Toggle -->
-          <button id="layout-toggle-btn" title="Toggle Sidebar Layout">
+          <button id="layout-toggle-btn" title="Ubah Tata Letak Sidebar">
             <svg
               width="15"
               height="15"
@@ -114,7 +111,7 @@
               <line x1="9" y1="3" x2="9" y2="21"></line>
             </svg>
             <span style="font-size: 11px; margin-left: 6px; font-weight: 500"
-              >Layout</span
+              >Tata Letak</span
             >
           </button>
         </div>
@@ -125,7 +122,7 @@
         <!-- Top Navigation Bar -->
         <div id="navigation-bar" class="hidden">
           <div id="nav-controls">
-            <button id="nav-back" class="nav-btn" title="Back">
+            <button id="nav-back" class="nav-btn" title="Kembali">
               <svg
                 width="18"
                 height="18"
@@ -140,7 +137,7 @@
                 <polyline points="12 19 5 12 12 5"></polyline>
               </svg>
             </button>
-            <button id="nav-forward" class="nav-btn" title="Forward">
+            <button id="nav-forward" class="nav-btn" title="Maju">
               <svg
                 width="18"
                 height="18"
@@ -155,7 +152,7 @@
                 <polyline points="12 5 19 12 12 19"></polyline>
               </svg>
             </button>
-            <button id="nav-reload" class="nav-btn" title="Reload">
+            <button id="nav-reload" class="nav-btn" title="Muat Ulang">
               <svg
                 width="18"
                 height="18"
@@ -170,7 +167,7 @@
                 <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
               </svg>
             </button>
-            <button id="nav-home" class="nav-btn" title="Dashboard">
+            <button id="nav-home" class="nav-btn" title="Beranda">
               <svg
                 width="18"
                 height="18"
@@ -205,7 +202,7 @@
               <input
                 type="text"
                 id="url-input"
-                placeholder="Enter URL or search..."
+                placeholder="Masukkan URL atau cari..."
                 spellcheck="false"
               />
             </div>
@@ -213,7 +210,7 @@
 
           <!-- Zoom Controls -->
           <div id="zoom-controls" class="zoom-wrapper">
-            <button id="zoom-out-btn" class="zoom-btn" title="Zoom Out (-)">
+            <button id="zoom-out-btn" class="zoom-btn" title="Perkecil (-)">
               <svg
                 width="14"
                 height="14"
@@ -228,7 +225,7 @@
               </svg>
             </button>
             <div class="zoom-divider"></div>
-            <button id="zoom-in-btn" class="zoom-btn" title="Zoom In (+)">
+            <button id="zoom-in-btn" class="zoom-btn" title="Perbesar (+)">
               <svg
                 width="14"
                 height="14"
@@ -249,27 +246,34 @@
         <!-- Dashboard -->
         <div id="dashboard">
           <div id="dashboard-header">
-            <h1>Welcome to <span class="gradient-text">OmniToko</span></h1>
+            <h1>
+              Selamat Datang di
+              <span
+                class="gradient-text"
+                title="Omnichannel Access System for Integrated Stores"
+                >OASIS</span
+              >
+            </h1>
             <p>
-              Manage all your e-commerce stores from one place. Each tab has its
-              own isolated session.
+              Kelola semua toko e-commerce Anda dari satu tempat. Setiap tab
+              memiliki sesi log masuk yang terisolasi.
             </p>
           </div>
 
           <!-- Active Sessions -->
           <div id="sessions-section">
             <div id="sessions-header">
-              <h2>🔐 Active Sessions</h2>
+              <h2>🔐 Sesi Aktif</h2>
               <span id="sessions-hint" class="section-hint"
-                >Login sessions are preserved — reopen anytime without
-                re-login</span
+                >Sesi log masuk tersimpan — buka kapan saja tanpa perlu login
+                ulang</span
               >
             </div>
             <div id="sessions-grid">
               <!-- Dynamically populated -->
             </div>
             <p id="sessions-empty" class="empty-hint">
-              No saved sessions yet. Open a store tab to create one.
+              Belum ada sesi tersimpan. Buka Tab Toko Baru untuk memulainya.
             </p>
           </div>
 
@@ -305,7 +309,7 @@
             <!-- Tokopedia -->
             <div
               class="marketplace-card"
-              data-url="https://seller.tokopedia.com/"
+              data-url="https://seller-id.tokopedia.com/"
               data-name="Tokopedia Seller"
             >
               <div
@@ -332,7 +336,7 @@
               </div>
               <div class="card-info">
                 <h3>Tokopedia</h3>
-                <span>Seller Dashboard</span>
+                <span>Dasbor Penjual</span>
               </div>
               <div class="card-arrow">→</div>
             </div>
@@ -483,8 +487,8 @@
                 </svg>
               </div>
               <div class="card-info">
-                <h3>Open URL</h3>
-                <span>Any website</span>
+                <h3>Buka URL</h3>
+                <span>Situs Apapun</span>
               </div>
               <div class="card-arrow">→</div>
             </div>
@@ -493,8 +497,8 @@
           <!-- User Custom Shortcuts -->
           <div id="user-shortcuts-section">
             <div id="user-shortcuts-header">
-              <h2>⭐ Your Shortcuts</h2>
-              <button id="add-shortcut-btn" title="Add new shortcut">
+              <h2>⭐ Pintasan Anda</h2>
+              <button id="add-shortcut-btn" title="Tambah pintasan baru">
                 <svg
                   width="14"
                   height="14"
@@ -508,24 +512,25 @@
                   <line x1="12" y1="5" x2="12" y2="19"></line>
                   <line x1="5" y1="12" x2="19" y2="12"></line>
                 </svg>
-                Add Shortcut
+                Tambah Pintasan
               </button>
             </div>
             <div id="user-shortcuts-grid"></div>
             <p id="user-shortcuts-empty" class="empty-hint">
-              No custom shortcuts yet. Click "Add Shortcut" to create one.
+              Belum ada pintasan bebas. Klik "Tambah Pintasan" untuk membuat
+              satu.
             </p>
           </div>
           <!-- Data Management -->
           <div id="data-management-section">
             <div id="data-management-header">
-              <h2>💾 Data Management</h2>
+              <h2>💾 Manajemen Data</h2>
             </div>
             <div class="data-cards-grid">
               <button
                 id="import-btn"
                 class="data-manage-btn"
-                title="Restore your settings and sessions"
+                title="Pulihkan pengaturan dan sesi tersimpan"
               >
                 <div
                   class="data-icon"
@@ -547,14 +552,14 @@
                   </svg>
                 </div>
                 <div class="data-text">
-                  <h3>Import Backup</h3>
-                  <span>Restore from JSON file</span>
+                  <h3>Impor Cadangan</h3>
+                  <span>Pulihkan dari file JSON</span>
                 </div>
               </button>
               <button
                 id="export-btn"
                 class="data-manage-btn"
-                title="Backup your current data"
+                title="Cadangkan data lengkap Anda"
               >
                 <div
                   class="data-icon"
@@ -576,17 +581,17 @@
                   </svg>
                 </div>
                 <div class="data-text">
-                  <h3>Export Backup</h3>
-                  <span>Save all sessions & shortcuts</span>
+                  <h3>Ekspor Cadangan</h3>
+                  <span>Simpan tab & pintasan</span>
                 </div>
               </button>
             </div>
           </div>
           <div id="dashboard-footer">
             <p>
-              💡 <strong>Tip:</strong> Each tab runs in a completely isolated
-              session. Log into different stores simultaneously without
-              conflicts!
+              💡 <strong>Tips Cerdas:</strong> Setiap tab berjalan di lingkungan
+              sesi yang terisolasi senuhnya. Anda bisa log masuk ke banyak toko
+              sekaligus tanpa bentrok!
             </p>
           </div>
         </div>
@@ -596,14 +601,14 @@
     <!-- Add Shortcut Modal -->
     <div id="modal-overlay" class="hidden">
       <div id="add-shortcut-modal">
-        <h3>Add New Shortcut</h3>
+        <h3>Tambah Pintasan Baru</h3>
         <form id="shortcut-form">
           <div class="form-group">
-            <label for="shortcut-name">Name</label>
+            <label for="shortcut-name">Nama</label>
             <input
               type="text"
               id="shortcut-name"
-              placeholder="e.g. Toko ABC - Shopee"
+              placeholder="cth. Toko ABC - Shopee"
               required
             />
           </div>
@@ -612,12 +617,12 @@
             <input
               type="text"
               id="shortcut-url"
-              placeholder="e.g. https://seller.shopee.co.id/"
+              placeholder="cth. https://seller.shopee.co.id/"
               required
             />
           </div>
           <div class="form-group">
-            <label>Color</label>
+            <label>Warna</label>
             <div id="color-picker">
               <button
                 type="button"
@@ -667,17 +672,17 @@
                 data-color="#10B981"
                 style="background: #10b981"
               ></button>
-              <div class="custom-color-wrapper" title="Pick any color">
+              <div class="custom-color-wrapper" title="Pilih warna apapun">
                 <input type="color" id="custom-color-input" value="#6366f1" />
-                <span class="custom-color-label">Custom</span>
+                <span class="custom-color-label">Kustom</span>
               </div>
             </div>
           </div>
           <div class="form-actions">
             <button type="button" id="modal-cancel" class="btn-secondary">
-              Cancel
+              Batal
             </button>
-            <button type="submit" class="btn-primary">Save Shortcut</button>
+            <button type="submit" class="btn-primary">Simpan Pintasan</button>
           </div>
         </form>
       </div>
@@ -686,23 +691,23 @@
     <!-- URL Input Modal (replaces prompt()) -->
     <div id="url-modal-overlay" class="hidden">
       <div id="url-modal">
-        <h3>🌐 Open URL</h3>
+        <h3>🌐 Buka URL URL</h3>
         <form id="url-modal-form">
           <div class="form-group">
-            <label for="url-modal-input">Enter the URL to open</label>
+            <label for="url-modal-input">Masukkan URL yang ingin dibuka</label>
             <input
               type="text"
               id="url-modal-input"
-              placeholder="https://example.com"
+              placeholder="https://google.com"
               spellcheck="false"
               required
             />
           </div>
           <div class="form-actions">
             <button type="button" id="url-modal-cancel" class="btn-secondary">
-              Cancel
+              Batal
             </button>
-            <button type="submit" class="btn-primary">Open</button>
+            <button type="submit" class="btn-primary">Buka</button>
           </div>
         </form>
       </div>
@@ -711,23 +716,23 @@
     <!-- Rename Session Modal -->
     <div id="rename-modal-overlay" class="hidden">
       <div id="rename-modal">
-        <h3>Rename Session</h3>
+        <h3>Ubah Nama Sesi</h3>
         <form id="rename-form">
           <div class="form-group">
-            <label for="rename-input">Session Name</label>
+            <label for="rename-input">Nama Sesi</label>
             <input
               type="text"
               id="rename-input"
-              placeholder="e.g. Toko Baju - Shopee"
+              placeholder="cth. Toko Baju - Shopee"
               required
               autofocus
             />
           </div>
           <div class="form-actions">
             <button type="button" id="rename-cancel" class="btn-secondary">
-              Cancel
+              Batal
             </button>
-            <button type="submit" class="btn-primary">Save Name</button>
+            <button type="submit" class="btn-primary">Simpan Nama</button>
           </div>
         </form>
       </div>
@@ -736,31 +741,32 @@
     <!-- Session Settings Modal (Phase 3) -->
     <div id="session-settings-modal-overlay" class="hidden">
       <div id="session-settings-modal">
-        <h3>Advanced Session Settings</h3>
+        <h3>Pengaturan Sesi Lanjutan</h3>
         <p class="modal-subtitle">
-          Configure isolation settings for this specific session.
+          Konfigurasi pengaturan isolasi khusus untuk sesi ini.
         </p>
         <form id="session-settings-form">
           <div class="form-group">
-            <label for="proxy-input">Custom Proxy (IP:Port)</label>
+            <label for="proxy-input">Kustom Proxy (IP:Port)</label>
             <input
               type="text"
               id="proxy-input"
-              placeholder="e.g. 192.168.1.1:8080 or http://user:pass@ip:port"
+              placeholder="cth. 192.168.1.1:8080 atau http://user:pass@ip:port"
             />
             <small class="help-text"
-              >Leave blank to use system IP. Supports http/socks.</small
+              >Kosongkan untuk menggunakan IP sistem. Mendukung
+              http/socks.</small
             >
           </div>
           <div class="form-group" style="margin-top: 12px">
-            <label for="ua-input">Custom User-Agent</label>
+            <label for="ua-input">Kustom User-Agent</label>
             <input
               type="text"
               id="ua-input"
-              placeholder="e.g. Mozilla/5.0 (iPhone; CPU iPhone OS 16_0...)"
+              placeholder="cth. Mozilla/5.0 (iPhone; CPU iPhone OS 16_0...)"
             />
             <small class="help-text"
-              >Leave blank for default Desktop Chrome.</small
+              >Kosongkan untuk bawaan Desktop Chrome.</small
             >
           </div>
           <div class="form-actions" style="margin-top: 24px">
@@ -769,13 +775,16 @@
               id="session-settings-cancel"
               class="btn-secondary"
             >
-              Cancel
+              Batal
             </button>
-            <button type="submit" class="btn-primary">Save Settings</button>
+            <button type="submit" class="btn-primary">Simpan Pengaturan</button>
           </div>
         </form>
       </div>
     </div>
+
+    <!-- Custom Global Tooltip -->
+    <div id="custom-tooltip" class="custom-tooltip"></div>
 
     <script src="renderer.js"></script>
   </body>

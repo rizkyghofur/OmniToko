@@ -27,13 +27,13 @@ const NAV_HEIGHT = 48;
 const iconPath = path.join(__dirname, "assets", "icon", "icon.png");
 
 // Ensure the app name is correct in the OS (e.g., macOS Dock & Application Menu)
-app.setName("OmniToko");
+app.setName("OASIS");
 
 function createWindow() {
   mainWindow = new BaseWindow({
     width: 1280,
     height: 800,
-    title: "OmniToko",
+    title: "OASIS",
     titleBarStyle: isMac ? "hiddenInset" : "default",
     icon: iconPath,
   });
@@ -92,21 +92,21 @@ function setupTray() {
   tray = new Tray(trayIcon);
   const contextMenu = Menu.buildFromTemplate([
     {
-      label: "Show OmniToko",
+      label: "Tampilkan OASIS",
       click: () => {
         if (mainWindow) mainWindow.show();
       },
     },
     { type: "separator" },
     {
-      label: "Quit",
+      label: "Keluar",
       click: () => {
         isQuitting = true;
         app.quit();
       },
     },
   ]);
-  tray.setToolTip("OmniToko");
+  tray.setToolTip("OASIS");
   tray.setContextMenu(contextMenu);
   tray.on("click", () => {
     if (mainWindow) mainWindow.show();
@@ -124,15 +124,15 @@ function setupAppMenu() {
   const template = [
     ...(isMac ? [{ role: "appMenu" }] : []),
     {
-      label: "File",
+      label: "Berkas",
       submenu: [
         {
-          label: "New Tab",
+          label: "Tab Baru",
           accelerator: "CmdOrCtrl+T",
           click: () => sendToUI("shortcut-new-tab"),
         },
         {
-          label: "Close Tab",
+          label: "Tutup Tab",
           accelerator: "CmdOrCtrl+W",
           click: () => sendToUI("shortcut-close-tab"),
         },
@@ -141,7 +141,7 @@ function setupAppMenu() {
       ],
     },
     {
-      label: "Edit",
+      label: "Ubah",
       submenu: [
         { role: "undo" },
         { role: "redo" },
@@ -153,21 +153,21 @@ function setupAppMenu() {
       ],
     },
     {
-      label: "View",
+      label: "Tampilan",
       submenu: [
         {
-          label: "Reload Tab",
+          label: "Muat Ulang Tab",
           accelerator: "CmdOrCtrl+R",
           click: () => sendToUI("shortcut-reload"),
         },
         { type: "separator" },
         {
-          label: "Zoom In",
+          label: "Perbesar",
           accelerator: "CmdOrCtrl+Plus",
           click: () => zoomActiveTab(0.1),
         },
         {
-          label: "Zoom Out",
+          label: "Perkecil",
           accelerator: "CmdOrCtrl+-",
           click: () => zoomActiveTab(-0.1),
         },
@@ -178,12 +178,12 @@ function setupAppMenu() {
         },
         { type: "separator" },
         {
-          label: "Focus URL Bar",
+          label: "Fokus ke Bar URL",
           accelerator: "CmdOrCtrl+L",
           click: () => sendToUI("shortcut-focus-url"),
         },
         {
-          label: "Go to Dashboard",
+          label: "Buka Beranda",
           accelerator: "CmdOrCtrl+Shift+H",
           click: () => sendToUI("shortcut-go-home"),
         },
@@ -195,12 +195,12 @@ function setupAppMenu() {
       label: "Tab",
       submenu: [
         {
-          label: "Next Tab",
+          label: "Tab Berikutnya",
           accelerator: "CmdOrCtrl+Shift+]",
           click: () => sendToUI("shortcut-next-tab"),
         },
         {
-          label: "Previous Tab",
+          label: "Tab Sebelumnya",
           accelerator: "CmdOrCtrl+Shift+[",
           click: () => sendToUI("shortcut-prev-tab"),
         },
@@ -213,7 +213,7 @@ function setupAppMenu() {
       ],
     },
     {
-      label: "Window",
+      label: "Jendela",
       submenu: [
         { role: "minimize" },
         { role: "zoom" },
@@ -247,6 +247,14 @@ app.whenReady().then(() => {
   if (isMac) {
     app.dock.setIcon(nativeImage.createFromPath(iconPath));
   }
+
+  app.setAboutPanelOptions({
+    applicationName: "OASIS",
+    applicationVersion: "1.0.0",
+    version: "1.0.0",
+    copyright: "© 2026 OASIS (Omnichannel Access System for Integrated Stores)",
+    iconPath: iconPath,
+  });
 
   createWindow();
   app.on("activate", () => {
@@ -321,6 +329,15 @@ ipcMain.handle("create-tab", (event, { tabId, url, sessionId }) => {
   view.webContents.on("did-navigate-in-page", (e, newUrl) => {
     if (uiView && !uiView.webContents.isDestroyed())
       uiView.webContents.send("url-updated", { tabId, url: newUrl });
+  });
+  view.webContents.on("page-favicon-updated", (e, favicons) => {
+    if (favicons && favicons.length > 0) {
+      if (uiView && !uiView.webContents.isDestroyed())
+        uiView.webContents.send("favicon-updated", {
+          tabId,
+          favicon: favicons[0],
+        });
+    }
   });
   view.webContents.on("page-title-updated", (e, title) => {
     if (uiView && !uiView.webContents.isDestroyed())
@@ -457,13 +474,13 @@ function setupContextMenu(webContents, tabId) {
     // Link actions
     if (params.linkURL) {
       menuItems.push({
-        label: "Open Link in New Tab",
+        label: "Buka Tautan di Tab Baru",
         click: () => {
           sendToUI("open-link-new-tab", { url: params.linkURL });
         },
       });
       menuItems.push({
-        label: "Copy Link Address",
+        label: "Salin Alamat Tautan",
         click: () => {
           require("electron").clipboard.writeText(params.linkURL);
         },
@@ -474,17 +491,17 @@ function setupContextMenu(webContents, tabId) {
     // Image actions
     if (params.mediaType === "image") {
       menuItems.push({
-        label: "Copy Image",
+        label: "Salin Gambar",
         click: () => webContents.copyImageAt(params.x, params.y),
       });
       menuItems.push({
-        label: "Copy Image Address",
+        label: "Salin Alamat Gambar",
         click: () => {
           require("electron").clipboard.writeText(params.srcURL);
         },
       });
       menuItems.push({
-        label: "Save Image As...",
+        label: "Simpan Gambar Sebagai...",
         click: () => webContents.downloadURL(params.srcURL),
       });
       menuItems.push({ type: "separator" });
@@ -493,29 +510,29 @@ function setupContextMenu(webContents, tabId) {
     // Text selection actions
     if (params.selectionText) {
       menuItems.push({
-        label: "Cut",
+        label: "Potong",
         role: "cut",
         enabled: params.editFlags.canCut,
       });
-      menuItems.push({ label: "Copy", role: "copy" });
+      menuItems.push({ label: "Salin", role: "copy" });
     }
 
     // Editable field actions
     if (params.isEditable) {
       if (!params.selectionText) {
         menuItems.push({
-          label: "Cut",
+          label: "Potong",
           role: "cut",
           enabled: params.editFlags.canCut,
         });
         menuItems.push({
-          label: "Copy",
+          label: "Salin",
           role: "copy",
           enabled: params.editFlags.canCopy,
         });
       }
-      menuItems.push({ label: "Paste", role: "paste" });
-      menuItems.push({ label: "Select All", role: "selectAll" });
+      menuItems.push({ label: "Tempel", role: "paste" });
+      menuItems.push({ label: "Pilih Semua", role: "selectAll" });
     }
 
     // General actions
@@ -526,36 +543,39 @@ function setupContextMenu(webContents, tabId) {
       !params.isEditable
     ) {
       menuItems.push({
-        label: "Back",
+        label: "Kembali",
         enabled: webContents.canGoBack(),
         click: () => webContents.goBack(),
       });
       menuItems.push({
-        label: "Forward",
+        label: "Maju",
         enabled: webContents.canGoForward(),
         click: () => webContents.goForward(),
       });
       menuItems.push({
-        label: "Reload",
+        label: "Muat Ulang",
         click: () => webContents.reload(),
       });
       menuItems.push({ type: "separator" });
-      menuItems.push({ label: "Select All", role: "selectAll" });
+      menuItems.push({ label: "Pilih Semua", role: "selectAll" });
     }
 
     // Always show Copy if there's text selected
     if (menuItems.length === 0) {
       menuItems.push({
-        label: "Back",
+        label: "Kembali",
         enabled: webContents.canGoBack(),
         click: () => webContents.goBack(),
       });
       menuItems.push({
-        label: "Forward",
+        label: "Maju",
         enabled: webContents.canGoForward(),
         click: () => webContents.goForward(),
       });
-      menuItems.push({ label: "Reload", click: () => webContents.reload() });
+      menuItems.push({
+        label: "Muat Ulang",
+        click: () => webContents.reload(),
+      });
     }
 
     const contextMenu = Menu.buildFromTemplate(menuItems);
@@ -764,44 +784,60 @@ ipcMain.handle("set-theme", (event, theme) => {
 // --- Import/Export ---
 
 ipcMain.handle("export-data", async () => {
-  const { filePath } = await dialog.showSaveDialog(mainWindow, {
-    title: "Export OmniToko Data",
-    defaultPath: "omnitoko_backup.json",
+  const result = await dialog.showSaveDialog({
+    title: "Ekspor Cadangan Data OASIS",
+    defaultPath: path.join(app.getPath("downloads"), "oasis_backup.json"),
     filters: [{ name: "JSON", extensions: ["json"] }],
   });
 
-  if (!filePath) return false;
+  if (result.canceled || !result.filePath) return false;
+  const filePath = result.filePath;
 
   const data = {
+    version: "1.0.0",
+    exportDate: new Date().toISOString(),
     shortcuts: readJSON(shortcutsPath(), []),
     sessions: readJSON(sessionsPath(), []),
     preferences: readJSON(prefsPath(), {}),
   };
 
   try {
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf-8");
     return true;
   } catch (e) {
+    console.error("Export error:", e);
     return false;
   }
 });
 
 ipcMain.handle("import-data", async () => {
-  const { filePaths } = await dialog.showOpenDialog(mainWindow, {
-    title: "Import OmniToko Data",
+  const result = await dialog.showOpenDialog({
+    title: "Impor Cadangan Data OASIS",
     filters: [{ name: "JSON", extensions: ["json"] }],
     properties: ["openFile"],
   });
 
-  if (!filePaths || filePaths.length === 0) return false;
+  if (result.canceled || !result.filePaths || result.filePaths.length === 0)
+    return false;
+
+  const filePath = result.filePaths[0];
 
   try {
-    const data = JSON.parse(fs.readFileSync(filePaths[0], "utf-8"));
+    const rawData = fs.readFileSync(filePath, "utf-8");
+    const data = JSON.parse(rawData);
+
+    // Basic validation to ensure it's a valid OASIS backup
+    if (!data.shortcuts && !data.sessions && !data.preferences) {
+      throw new Error("Invalid backup file structure");
+    }
+
     if (data.shortcuts) writeJSON(shortcutsPath(), data.shortcuts);
     if (data.sessions) writeJSON(sessionsPath(), data.sessions);
     if (data.preferences) writeJSON(prefsPath(), data.preferences);
+
     return true;
   } catch (e) {
+    console.error("Import error:", e);
     return false;
   }
 });
