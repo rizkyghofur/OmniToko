@@ -1450,6 +1450,16 @@ body.layout-top #layout-toggle-btn {
   transform: translateX(120%);
   opacity: 0;
   transition: all 0.3s ease;
+  min-width: 280px;
+  position: relative;
+}
+
+.toast-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
 }
 
 .download-toast.visible {
@@ -1466,10 +1476,32 @@ body.layout-top #layout-toggle-btn {
   font-size: 13px;
   font-weight: 500;
   color: var(--text-primary);
-  margin-bottom: 8px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.toast-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0;
+  margin-top: -2px;
+  margin-right: -4px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  font-size: 16px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.toast-close:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
 }
 
 .toast-progress-bar {
@@ -1522,4 +1554,116 @@ body.layout-top #layout-toggle-btn {
 
 .custom-tooltip.show {
   opacity: 1;
+}
+
+/* ===== DATA MANAGEMENT (DASHBOARD) ===== */
+#dashboard-manage {
+  max-width: 800px;
+  width: 100%;
+  margin-top: 32px;
+  animation: fadeIn 0.6s ease-out backwards;
+  animation-delay: 0.4s;
+}
+
+#dashboard-manage h2 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.manage-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.data-manage-btn {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 24px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: left;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+}
+
+.data-manage-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.03), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.data-manage-btn:hover {
+  background-color: var(--bg-card-hover);
+  border-color: var(--accent-color);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
+}
+
+.data-manage-btn:hover::before {
+  opacity: 1;
+}
+
+.data-manage-btn .data-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.data-manage-btn:hover .data-icon {
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+.data-manage-btn .data-text {
+  flex-grow: 1;
+}
+
+.data-manage-btn h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: var(--text-primary);
+}
+
+.data-manage-btn span {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* Specific button colors */
+#import-btn .data-icon {
+  background: rgba(16, 185, 129, 0.1) !important;
+  color: #10b981 !important;
+}
+#export-btn .data-icon {
+  background: rgba(139, 92, 246, 0.1) !important;
+  color: #8b5cf6 !important;
+}
+
+@media (max-width: 768px) {
+  .manage-grid {
+    grid-template-columns: 1fr;
+  }
 }

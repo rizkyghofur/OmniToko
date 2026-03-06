@@ -11,7 +11,9 @@ const {
   dialog,
 } = require("electron");
 const path = require("path");
-const fs = require("fs");
+const fs = require("fs-extra");
+const archiver = require("archiver");
+const extract = require("extract-zip");
 
 let mainWindow;
 let uiView;
@@ -785,35 +787,55 @@ ipcMain.handle("set-theme", (event, theme) => {
 
 ipcMain.handle("export-data", async () => {
   const result = await dialog.showSaveDialog({
-    title: "Ekspor Cadangan Data OASIS",
-    defaultPath: path.join(app.getPath("downloads"), "oasis_backup.json"),
-    filters: [{ name: "JSON", extensions: ["json"] }],
+    title: "Ekspor Cadangan Lengkap OASIS (.zip)",
+    defaultPath: path.join(app.getPath("downloads"), "oasis_full_backup.zip"),
+    filters: [{ name: "OASIS Backup", extensions: ["zip"] }],
   });
 
   if (result.canceled || !result.filePath) return false;
   const filePath = result.filePath;
-
-  const data = {
-    version: "1.0.0",
-    exportDate: new Date().toISOString(),
-    shortcuts: readJSON(shortcutsPath(), []),
-    sessions: readJSON(sessionsPath(), []),
-    preferences: readJSON(prefsPath(), {}),
-  };
+  const userData = app.getPath("userData");
 
   try {
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf-8");
-    return true;
+    const output = fs.createWriteStream(filePath);
+    const archive = archiver("zip", { zlib: { level: 9 } });
+
+    return new Promise((resolve, reject) => {
+      output.on("close", () => resolve(true));
+      archive.on("error", (err) => {
+        console.error("Archive error:", err);
+        reject(false);
+      });
+
+      archive.pipe(output);
+
+      // Add JSON files
+      const files = ["shortcuts.json", "sessions.json", "preferences.json"];
+      files.forEach((f) => {
+        const src = path.join(userData, f);
+        if (fs.existsSync(src)) {
+          archive.file(src, { name: f });
+        }
+      });
+
+      // Add Partitions folder
+      const partitionsDir = path.join(userData, "Partitions");
+      if (fs.existsSync(partitionsDir)) {
+        archive.directory(partitionsDir, "Partitions");
+      }
+
+      archive.finalize();
+    });
   } catch (e) {
-    console.error("Export error:", e);
+    console.error("Full Export error:", e);
     return false;
   }
 });
 
 ipcMain.handle("import-data", async () => {
   const result = await dialog.showOpenDialog({
-    title: "Impor Cadangan Data OASIS",
-    filters: [{ name: "JSON", extensions: ["json"] }],
+    title: "Impor Cadangan Lengkap OASIS (.zip)",
+    filters: [{ name: "OASIS Backup", extensions: ["zip"] }],
     properties: ["openFile"],
   });
 
@@ -821,23 +843,45 @@ ipcMain.handle("import-data", async () => {
     return false;
 
   const filePath = result.filePaths[0];
+  const userData = app.getPath("userData");
 
   try {
-    const rawData = fs.readFileSync(filePath, "utf-8");
-    const data = JSON.parse(rawData);
+    // 1. Temporary extraction
+    const tempDir = path.join(
+      app.getPath("temp"),
+      `oasis_import_${Date.now()}`,
+    );
+    fs.ensureDirSync(tempDir);
 
-    // Basic validation to ensure it's a valid OASIS backup
-    if (!data.shortcuts && !data.sessions && !data.preferences) {
-      throw new Error("Invalid backup file structure");
+    await extract(filePath, { dir: tempDir });
+
+    // 2. Move JSONs (using fs-extra copy)
+    const files = ["shortcuts.json", "sessions.json", "preferences.json"];
+    files.forEach((f) => {
+      const src = path.join(tempDir, f);
+      if (fs.existsSync(src)) fs.copySync(src, path.join(userData, f));
+    });
+
+    // 3. Move Partitions
+    const srcPartitions = path.join(tempDir, "Partitions");
+    if (fs.existsSync(srcPartitions)) {
+      const destPartitions = path.join(userData, "Partitions");
+      fs.ensureDirSync(destPartitions);
+      fs.copySync(srcPartitions, destPartitions, { overwrite: true });
     }
 
-    if (data.shortcuts) writeJSON(shortcutsPath(), data.shortcuts);
-    if (data.sessions) writeJSON(sessionsPath(), data.sessions);
-    if (data.preferences) writeJSON(prefsPath(), data.preferences);
+    // 4. Cleanup
+    fs.removeSync(tempDir);
+
+    // 5. Relaunch app to apply all session data
+    setTimeout(() => {
+      app.relaunch();
+      app.exit(0);
+    }, 1000);
 
     return true;
   } catch (e) {
-    console.error("Import error:", e);
+    console.error("Full Import error:", e);
     return false;
   }
 });

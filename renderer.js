@@ -89,25 +89,8 @@ function init() {
     const url = card.dataset.url;
     const iconContainer = card.querySelector(".card-icon");
     if (url && iconContainer) {
-      try {
-        const u = new URL(url);
-        // Mengambil domain utama (root domain) dengan mengambil 2 atau 3 kata terakhir berdasarkan ekstensi ccTLD
-        const parts = u.hostname.split(".");
-        let domain = u.hostname;
-        if (parts.length > 2) {
-          // Menangani domain dengan country code spt .co.id, .com.au
-          if (
-            parts[parts.length - 2] === "co" ||
-            parts[parts.length - 2] === "com" ||
-            parts[parts.length - 2] === "web"
-          ) {
-            domain = parts.slice(-3).join(".");
-          } else {
-            domain = parts.slice(-2).join(".");
-          }
-        }
-        const faviconUrl = `https://www.google.com/s2/favicons?sz=128&domain=${domain}`;
-
+      const faviconUrl = getFaviconUrl(url);
+      if (faviconUrl) {
         // Remove the hardcoded gradient background from the container
         iconContainer.style.background = "transparent";
 
@@ -116,7 +99,7 @@ function init() {
           <svg style="display:none;" width="32" height="32" viewBox="0 0 24 24" fill="white">
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-9l6 4.5-6 4.5z"/>
           </svg>`;
-      } catch (e) {}
+      }
     }
   });
 
@@ -201,15 +184,21 @@ function init() {
   window.omniAPI.onFaviconUpdated(({ tabId, favicon }) => {
     const tab = tabs.find((t) => t.id === tabId);
     if (tab) {
-      if (tab.favicon !== favicon) {
-        tab.favicon = favicon;
+      // For Shopee, always try to get the favicon from the URL directly
+      // as their dynamic favicon often doesn't reflect the correct one.
+      const resolvedFavicon = tab.url.includes("shopee.co.id")
+        ? getFaviconUrl(tab.url)
+        : favicon;
+
+      if (tab.favicon !== resolvedFavicon) {
+        tab.favicon = resolvedFavicon;
         if (tab.sessionId) {
           window.omniAPI.saveSession({
             sessionId: tab.sessionId,
             name: tab.name,
             url: tab.url,
             color: tab.color,
-            favicon: favicon,
+            favicon: resolvedFavicon, // Use the resolved favicon
           });
           loadSessions();
         }
@@ -294,7 +283,13 @@ function init() {
     const name = shortcutNameInput.value.trim();
     const url = shortcutUrlInput.value.trim();
     if (!name || !url) return;
-    await window.omniAPI.addShortcut({ name, url, color: selectedColor });
+    const favicon = getFaviconUrl(url);
+    await window.omniAPI.addShortcut({
+      name,
+      url,
+      color: selectedColor,
+      favicon,
+    });
     closeShortcutModal();
     loadUserShortcuts();
   });
@@ -438,13 +433,14 @@ function init() {
 
   // --- Import / Export ---
   exportBtn.addEventListener("click", async () => {
+    showDownloadToast("export", "📦 Menyiapkan cadangan penuh...", 30);
     const success = await window.omniAPI.exportData();
     if (success) {
-      showDownloadToast("export", "✅ Cadangan berhasil disimpan!", 100);
+      showDownloadToast("export", "✅ Cadangan disimpan! (.zip)", 100);
     } else {
       showDownloadToast("export", "❌ Gagal mengekspor cadangan.", 0);
     }
-    setTimeout(() => removeDownloadToast("export"), 3000);
+    setTimeout(() => removeDownloadToast("export"), 2000);
   });
 
   importBtn.addEventListener("click", async () => {
@@ -453,16 +449,17 @@ function init() {
         "Mengimpor data akan menimpa sesi dan pintasan saat ini. Lanjutkan?",
       )
     ) {
+      showDownloadToast("import", "📦 Memulihkan data... Mohon tunggu", 50);
       const success = await window.omniAPI.importData();
       if (success) {
         showDownloadToast(
           "import",
-          "✅ Data berhasil dipulihkan! Memuat ulang...",
+          "✅ Pemulihan Berhasil! Me-restart aplikasi...",
           100,
         );
-        setTimeout(() => location.reload(), 1500);
       } else {
-        alert("Gagal mengimpor data. Pastikan file cadangan valid.");
+        alert("Gagal mengimpor data. Pastikan file .zip cadangan valid.");
+        removeDownloadToast("import");
       }
     }
   });
@@ -499,13 +496,11 @@ function renderSessions(sessions) {
     const isOpen = tabs.some((t) => t.sessionId === s.sessionId);
 
     let faviconUrl = s.favicon;
-    if (!faviconUrl && s.url) {
-      try {
-        const u = new URL(
-          s.url.startsWith("http") ? s.url : "https://" + s.url,
-        );
-        faviconUrl = `https://www.google.com/s2/favicons?domain=${u.hostname}&sz=128`;
-      } catch (e) {}
+    // Always re-resolve Shopee favicons to ensure we don't use stale seller subdomains
+    if (s.url && s.url.includes("shopee.co.id")) {
+      faviconUrl = getFaviconUrl(s.url);
+    } else if (!faviconUrl && s.url) {
+      faviconUrl = getFaviconUrl(s.url);
     }
     const initial = (s.name || "?").charAt(0).toUpperCase();
     const faviconHtml = faviconUrl
@@ -749,9 +744,14 @@ function renderUserShortcuts(shortcuts) {
     const card = document.createElement("div");
     card.className = "marketplace-card user-shortcut-card";
 
+    let favicon = sc.favicon;
+    if (!favicon && sc.url) {
+      favicon = getFaviconUrl(sc.url);
+    }
+
     let iconHtml;
-    if (sc.favicon) {
-      iconHtml = `<img src="${sc.favicon}" width="28" height="28" style="border-radius:4px;" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+    if (favicon) {
+      iconHtml = `<img src="${favicon}" width="28" height="28" style="border-radius:4px;" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
           <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
           <polyline points="9 22 9 12 15 12 15 22"></polyline>
@@ -790,6 +790,35 @@ function renderUserShortcuts(shortcuts) {
 
     userShortcutsGrid.appendChild(card);
   });
+}
+
+function getFaviconUrl(url) {
+  if (!url) return null;
+  try {
+    const u = new URL(url.startsWith("http") ? url : "https://" + url);
+
+    // Special case for Shopee: any shopee.co.id subdomain should use root domain icon
+    if (u.hostname.includes("shopee.co.id")) {
+      return `https://www.google.com/s2/favicons?sz=128&domain=shopee.co.id`;
+    }
+
+    const parts = u.hostname.split(".");
+    let domain = u.hostname;
+    if (parts.length > 2) {
+      if (
+        parts[parts.length - 2] === "co" ||
+        parts[parts.length - 2] === "com" ||
+        parts[parts.length - 2] === "web"
+      ) {
+        domain = parts.slice(-3).join(".");
+      } else {
+        domain = parts.slice(-2).join(".");
+      }
+    }
+    return `https://www.google.com/s2/favicons?sz=128&domain=${domain}`;
+  } catch (e) {
+    return null;
+  }
 }
 
 function escapeHtml(str) {
@@ -1042,11 +1071,21 @@ function showDownloadToast(id, message, percent) {
   toast.className = "download-toast";
   toast.id = `toast-${id}`;
   toast.innerHTML = `
-    <div class="toast-message">${message}</div>
+    <div class="toast-header">
+      <div class="toast-message">${message}</div>
+      <button class="toast-close" title="Tutup">×</button>
+    </div>
     <div class="toast-progress-bar">
       <div class="toast-progress-fill" style="width: ${percent}%"></div>
     </div>
   `;
+
+  // Add close event
+  toast.querySelector(".toast-close").addEventListener("click", (e) => {
+    e.stopPropagation();
+    removeDownloadToast(id);
+  });
+
   container.appendChild(toast);
   // Trigger animation
   requestAnimationFrame(() => toast.classList.add("visible"));
