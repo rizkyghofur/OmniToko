@@ -1,207 +1,118 @@
-# 🏪 OmniToko
+# 🏪 OASIS (Omnichannel Access System for Integrated Stores)
 
-**Multi-session e-commerce store manager** — manage all your online store logins from one desktop app, without conflicts.
+**Sistem Akses Omnichannel untuk Toko Terintegrasi** — Kelola ribuan akun toko online Anda dari satu aplikasi desktop dengan isolasi sesi penuh tanpa hambatan.
 
-Built with [Electron.js](https://www.electronjs.org/).
+Dibangun dengan [Electron.js](https://www.electronjs.org/) menggunakan teknologi `BaseWindow` dan `WebContentsView` terbaru untuk performa maksimal.
 
 ---
 
-### 📸 Application Preview
+### 📸 Pratinjau Aplikasi
 
 <p align="center">
-  <img src="screenshots/1.png" width="800" alt="OmniToko Dashboard">
+  <img src="screenshots/1.png" width="800" alt="OASIS Dashboard">
 </p>
 <p align="center">
-  <img src="screenshots/2.png" width="400" alt="Session when has Login in Shopee">
-  <img src="screenshots/3.png" width="400" alt="Session when has no Login in Shopee">
+  <img src="screenshots/2.png" width="400" alt="Sesi Aktif Shopee">
+  <img src="screenshots/3.png" width="400" alt="Dashboard Marketplace">
 </p>
 
 ---
 
-## ✨ Features
+## ✨ Fitur Unggulan
 
-### 🔐 Session Isolation
+### 🔐 Isolasi Sesi Sempurna
 
-Each tab runs in a **completely isolated session**. Login to Shopee on Tab 1, Tokopedia on Tab 2, and they will never interfere — no more switching browsers!
+Setiap tab berjalan di lingkungan **partisi sesi yang terisolasi sepenuhnya**. Anda bisa log masuk ke Shopee di Tab 1, Tokopedia di Tab 2, dan akun Shopee lain di Tab 3 tanpa pernah bentrok. Tidak perlu lagi menggunakan banyak browser atau mode incognito.
 
-### 💾 Persistent Sessions
+### 💾 Sesi Persisten (Tetap Log Masuk)
 
-Login sessions are **saved and persist** across tab close/reopen:
+Sesi log masuk Anda **tersimpan secara otomatis** dan tetap ada meskipun tab ditutup atau aplikasi dimatikan:
 
-- Close a tab, reopen later — **you're still logged in!**
-- Dashboard shows all sessions with **Reopen** / **Focus** / **Delete** controls
+- Tutup tab, buka lagi nanti — **Anda masih dalam keadaan log masuk!**
+- Dasbor menampilkan semua sesi tersimpan dengan kontrol **Fokus**, **Buka Kembali**, atau **Hapus**.
 
-### 🏠 Dashboard
+### 🛡️ Fitur Profesional (Alat Anti-Banned)
 
-Branded home page with quick-access marketplace shortcuts: Shopee, Tokopedia, TikTok Shop, Lazada, Blibli, Bukalapak, Shopify, and custom URLs.
+- **Proxy Per-Sesi (`HTTP`/`SOCKS`):** Assign IP proxy unik untuk setiap akun tertentu. Samarkan jejak digital geografis toko Anda untuk menghindari _banned_ dari platform e-commerce.
+- **User-Agent Kustom:** Ubah sidik jari browser (fingerprint) untuk setiap sesi (misal: simulasi iPhone atau versi Chrome tertentu).
+- **Hapus Cookie Mandiri:** Bersihkan data cache dan cookie untuk satu akun tertentu tanpa memengaruhi akun lainnya di tab sebelah.
+- **Duplikat Sesi:** Gandakan tab aktif secara instan dengan token otorisasi yang sama untuk mengelola toko yang sama di banyak jendela.
 
-### 🗂️ Session Control & Organization
+### 🚀 Produktivitas Maksimal
 
-- **Reopen / Focus / Delete** controls for every session
-- **Session Groups**: Automatically categorizes active sessions by their storefront domain
-- **Session Rename**: Click ✎ to rename auto-generated sessions (e.g., "Shopee Seller" → "Toko Baju - Shopee")
-- **Scrollable List View**: Active sessions cleanly scroll internally when maximizing vertical workspace
+- **Manajemen Data (Backup/Restore):** Ekspor seluruh pengaturan, sesi, proxy, dan pintasan ke dalam satu file JSON cadangan. Pindahkan data antar perangkat dengan mudah.
+- **Pintasan Kustom:** Tambahkan toko atau situs favorit Anda dengan pemilihan warna ikon dan pengambilan favicon otomatis.
+- **Badge Notifikasi:** Tab di sidebar secara otomatis menampilkan angka notifikasi (misal: pesanan baru) yang diambil langsung dari judul situs web secara real-time.
+- **Tata Letak Dinamis:** Ubah posisi sidebar dari samping (Lama) ke atas (Modern) sesuai kenyamanan Anda.
 
-### 🛡️ Advanced Session Features (Pro Tools)
+### 🌓 Antarmuka Modern & Bahasa Indonesia
 
-- **Per-Session Proxy (`HTTP`/`SOCKS`)**: Assign a unique proxy IP to a specific session. Mask your store's geographical fingerprint to avoid platform bans!
-- **Custom User-Agent**: Spoof the origin browser fingerprint for any session (e.g., simulate an iPhone or custom Desktop Chrome).
-- **Clear Cookies**: Securely nuke isolated session data, cache, and cookies for a single account without affecting adjacent sessions.
-- **Duplicate Session**: Instantly clone an active tab. The new tab inherits the exact authorization token partition, letting you manage the same shop in multiple windows simultaneously!
-
-### ⭐ Custom Shortcuts
-
-Add your own shortcuts with name, URL, custom color picker, and auto-fetched favicons.
-
-### 🌗 Dark / Light Mode
-
-Toggle between themes with persistent preference storage.
-
-### ⌨️ Keyboard Shortcuts
-
-| Shortcut               | Action              |
-| ---------------------- | ------------------- |
-| `Cmd/Ctrl + T`         | New Tab (Dashboard) |
-| `Cmd/Ctrl + W`         | Close Current Tab   |
-| `Cmd/Ctrl + R`         | Reload Tab          |
-| `Cmd/Ctrl + L`         | Focus URL Bar       |
-| `Cmd/Ctrl + Shift + H` | Go to Dashboard     |
-| `Cmd/Ctrl + Shift + ]` | Next Tab            |
-| `Cmd/Ctrl + Shift + [` | Previous Tab        |
-| `Cmd/Ctrl + 1-9`       | Switch to Tab 1-9   |
-| `Cmd/Ctrl + +`         | Zoom In             |
-| `Cmd/Ctrl + -`         | Zoom Out            |
-| `Cmd/Ctrl + Scroll`    | Pinch to Zoom       |
-
-### 🖱️ Context Menu (Right-Click)
-
-Full right-click menu on web pages:
-
-- **Link**: Open in new tab, Copy link
-- **Image**: Copy image, Save image as
-- **Text**: Cut, Copy, Paste, Select All
-- **Page**: Back, Forward, Reload
-
-### 📥 Download Manager
-
-- Automatic download handling with save dialog
-- Toast notifications with real-time progress bar
-- Completion/failure notifications with auto-dismiss
-
-### 🚀 Advanced Productivity
-
-- **System Tray**: App minimizes to tray instead of quitting, running silently in the background (Windows/Linux)
-- **Notification Badges**: Sidebar tabs show red notification counters dynamically parsed from website titles (e.g., `(2) New Orders`)
-- **Tab Reordering**: Use drag-and-drop on the sidebar tabs to customize your workspace layout
-- **Data Backup (Import/Export)**: Use the sidebar buttons to export or import all your shortcuts, sessions, and preferences directly to/from a JSON backup file
-- **Toggle Layout**: Change the sidebar position dynamically from the traditional vertical left side to a horizontal top layout
-- **Native Zoom Support**: Use the UI buttons (+, -) in the navigation bar or use native trackpad pinch-to-zoom (Cmd/Ctrl + Scroll) to scale store UI
-
-### 🖥️ Cross-Platform
-
-- **macOS**: Hidden title bar with traffic lights
-- **Windows/Linux**: Standard title bar
-- Custom app icon (replaceable via `assets/icon/`)
+- **Bahasa Indonesia:** Seluruh UI aplikasi, menu, dan dialog telah diterjemahkan ke Bahasa Indonesia yang komunikatif.
+- **Mode Gelap/Terang:** Tema yang nyaman di mata dengan penyimpanan preferensi otomatis.
 
 ---
 
-## 🚀 Getting Started
+## 🛠️ Detail Teknis (Untuk Pemilik Source Code)
 
-### Prerequisites
+### Arsitektur Proyek
 
-- [Node.js](https://nodejs.org/) v18+
+- **`main.js`**: Menangani proses utama, sistem jendela, IPC, manajemen sesi, dan protokol download.
+- **`preload.js`**: Bridge keamanan antara proses utama dan renderer (UI).
+- **`renderer.js`**: Logika antarmuka, dasbor, manajemen tab, dan toast notifikasi.
+- **`index.html`**: Struktur layout menggunakan CSS Vanilla modern (Glassmorphism & Flexbox).
 
-### Install & Run
+### Teknologi yang Digunakan
+
+- **Electron v40**: Framework desktop lintas platform.
+- **BaseWindow + WebContentsView**: API jendela terbaru untuk kontrol tampilan yang lebih presisi.
+- **Session Partitioning**: Metode isolasi data tingkat tinggi.
+- **Google Favicon API**: Pengambilan otomatis ikon situs web.
+
+---
+
+## 🚀 Cara Menjalankan
+
+### Prasyarat
+
+- [Node.js](https://nodejs.org/) v18 ke atas.
+
+### Instalasi
+
+1. Ekstrak folder `OASIS`.
+2. Buka terminal/CMD di dalam folder tersebut.
+3. Jalankan perintah:
+   ```bash
+   npm install
+   npm start
+   ```
+
+### Membangun Aplikasi (Build)
+
+Gunakan perintah berikut untuk membuat file `.exe` atau `.dmg` siap pakai:
 
 ```bash
-cd OmniToko
-npm install
-npm start
+npm run build:mac   # Untuk macOS
+npm run build:win   # Untuk Windows
+npm run build:linux # Untuk Linux
 ```
 
 ---
 
-## 📦 Building for Distribution
+## 🎨 Kustomisasi Branding
 
-### macOS
+Anda dapat mengubah identitas aplikasi dengan mudah:
 
-```bash
-npm run build:mac
-```
-
-Output: `dist/OmniToko-x.x.x.dmg` + `.zip`
-
-### Windows
-
-```bash
-npm run build:win
-```
-
-Output: `dist/OmniToko Setup x.x.x.exe` (installer) + portable
-
-### Linux
-
-```bash
-npm run build:linux
-```
-
-Output: `dist/OmniToko-x.x.x.AppImage` + `.deb`
-
-### All platforms
-
-```bash
-npm run build
-```
+1. Ganti ikon di `assets/icon/icon.png` (ukuran minimal 1024x1024).
+2. Ubah `productName` di `package.json`.
+3. Jalankan `npm run build` kembali.
 
 ---
 
-## 🎨 Custom App Icon
+## 📝 Lisensi
 
-Replace `assets/icon/icon.png` with your own **1024×1024 PNG** icon before building.
-
-See `assets/icon/README.md` for format conversion instructions (`.icns` for macOS, `.ico` for Windows).
-
----
-
-## 🗂️ Project Structure
-
-```
-OmniToko/
-├── main.js          # Main process — windows, IPC, shortcuts, context menu, downloads
-├── preload.js       # Secure bridge between main and renderer
-├── renderer.js      # UI logic — dashboard, tabs, sessions, download toasts
-├── index.html       # Layout — sidebar, dashboard, modals
-├── styles.css       # Themes, responsive design, animations
-├── assets/
-│   └── icon/
-│       ├── icon.png # App icon (1024×1024)
-│       └── README.md
-├── package.json     # Config & build settings
-└── README.md
-```
-
-### Data Storage
-
-| File               | Contents         | Location                                          |
-| ------------------ | ---------------- | ------------------------------------------------- |
-| `shortcuts.json`   | Custom shortcuts | `~/Library/Application Support/OmniToko/` (macOS) |
-| `sessions.json`    | Login sessions   | `%APPDATA%/OmniToko/` (Windows)                   |
-| `preferences.json` | Theme preference | `~/.config/OmniToko/` (Linux)                     |
+Produk ini bersifat **PROPRIETARY (Close Source)**.
+Lisensi penggunaan dan hak distribusi hanya diizinkan bagi pemilik sah kode sumber ini. Dilarang mendistribusikan ulang kode ini tanpa izin tertulis sesuai dengan ketentuan dalam [LICENSE.md](LICENSE.md).
 
 ---
 
-## 🛠️ Tech Stack
-
-| Technology                   | Purpose                  |
-| ---------------------------- | ------------------------ |
-| Electron v40                 | Desktop framework        |
-| BaseWindow + WebContentsView | Modern window APIs       |
-| session.fromPartition()      | Session isolation        |
-| Google Favicon API           | Auto-fetch icons         |
-| electron-builder             | Cross-platform packaging |
-
----
-
-## 📝 License
-
-ISC
+© 2026 OASIS - Seluruh Hak Cipta Dilindungi.
