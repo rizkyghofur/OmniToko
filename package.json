@@ -20,7 +20,13 @@
       "index.html",
       "styles.css",
       "assets/**/*",
-      "package.json"
+      "package.json",
+      "node_modules/**/*",
+      "node_modules/archiver-utils/**/*"
+    ],
+    "asarUnpack": [
+      "node_modules/archiver-utils/**/*",
+      "node_modules/archiver/**/*"
     ],
     "mac": {
       "target": [
@@ -65,8 +71,7 @@
     "electron-builder": "^25.1.8"
   },
   "dependencies": {
-    "archiver": "^7.0.1",
-    "extract-zip": "^2.0.1",
+    "adm-zip": "^0.5.16",
     "fs-extra": "^11.3.4"
   }
 }

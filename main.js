@@ -12,8 +12,6 @@ const {
 } = require("electron");
 const path = require("path");
 const fs = require("fs-extra");
-const archiver = require("archiver");
-const extract = require("extract-zip");
 
 let mainWindow;
 let uiView;
@@ -785,6 +783,8 @@ ipcMain.handle("set-theme", (event, theme) => {
 
 // --- Import/Export ---
 
+const AdmZip = require("adm-zip");
+
 ipcMain.handle("export-data", async () => {
   const result = await dialog.showSaveDialog({
     title: "Ekspor Cadangan Lengkap OASIS (.zip)",
@@ -795,39 +795,147 @@ ipcMain.handle("export-data", async () => {
   if (result.canceled || !result.filePath) return false;
   const filePath = result.filePath;
   const userData = app.getPath("userData");
+  const tempExportDir = path.join(
+    app.getPath("temp"),
+    `oasis_export_${Date.now()}`,
+  );
 
   try {
-    const output = fs.createWriteStream(filePath);
-    const archive = archiver("zip", { zlib: { level: 9 } });
+    const allSessions = readJSON(sessionsPath(), []);
 
-    return new Promise((resolve, reject) => {
-      output.on("close", () => resolve(true));
-      archive.on("error", (err) => {
-        console.error("Archive error:", err);
-        reject(false);
-      });
-
-      archive.pipe(output);
-
-      // Add JSON files
-      const files = ["shortcuts.json", "sessions.json", "preferences.json"];
-      files.forEach((f) => {
-        const src = path.join(userData, f);
-        if (fs.existsSync(src)) {
-          archive.file(src, { name: f });
+    // 1. Flush storage data
+    for (const s of allSessions) {
+      if (s.sessionId) {
+        try {
+          const ses = session.fromPartition(`persist:${s.sessionId}`);
+          await ses.flushStorageData();
+        } catch (err) {
+          console.warn(`Failed to flush session ${s.sessionId}`, err);
         }
-      });
-
-      // Add Partitions folder
-      const partitionsDir = path.join(userData, "Partitions");
-      if (fs.existsSync(partitionsDir)) {
-        archive.directory(partitionsDir, "Partitions");
       }
+    }
+    try {
+      await session.defaultSession.flushStorageData();
+    } catch (err) {}
 
-      archive.finalize();
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    fs.ensureDirSync(tempExportDir);
+
+    // 2. Export Cookies via Electron API to bypass SQLite Windows file locks
+    for (const s of allSessions) {
+      if (s.sessionId) {
+        try {
+          const ses = session.fromPartition(`persist:${s.sessionId}`);
+          const cookies = await ses.cookies.get({});
+          const sessionExportDir = path.join(
+            tempExportDir,
+            "Partitions",
+            s.sessionId,
+          );
+          fs.ensureDirSync(sessionExportDir);
+          fs.writeFileSync(
+            path.join(sessionExportDir, "cookies_backup.json"),
+            JSON.stringify(cookies, null, 2),
+            "utf-8",
+          );
+        } catch (err) {
+          console.error(`Failed to export cookies for ${s.sessionId}`, err);
+        }
+      }
+    }
+
+    const essentialFiles = [
+      "shortcuts.json",
+      "sessions.json",
+      "preferences.json",
+    ];
+
+    essentialFiles.forEach((f) => {
+      const src = path.join(userData, f);
+      if (fs.existsSync(src)) {
+        try {
+          fs.copySync(src, path.join(tempExportDir, f));
+        } catch (err) {
+          console.warn(`Skipped locked file ${f}`, err);
+        }
+      }
     });
+
+    const partitionsDir = path.join(userData, "Partitions");
+    if (fs.existsSync(partitionsDir)) {
+      // Aggressively copy directory, ignoring EBUSY/EPERM errors on individual files
+      const copyDirRecursive = (src, dest) => {
+        fs.ensureDirSync(dest);
+        let entries = [];
+        try {
+          entries = fs.readdirSync(src, { withFileTypes: true });
+        } catch (e) {
+          console.warn(`Skipping locked directory ${src}:`, e);
+          return;
+        }
+
+        for (const entry of entries) {
+          const srcPath = path.join(src, entry.name);
+          const destPath = path.join(dest, entry.name);
+          const basename = entry.name;
+
+          const excludedNames = [
+            "Code Cache",
+            "GPUCache",
+            "blob_storage",
+            "Cache",
+            "Service Worker",
+            "Conversions",
+            "DawnGraphiteCache",
+            "DawnWebGPUCache",
+            "QuotaManager",
+            "QuotaManager-journal",
+            "QuotaManager-shm",
+            "QuotaManager-wal",
+          ];
+          if (excludedNames.includes(basename)) continue;
+
+          if (
+            basename.endsWith("-journal") ||
+            basename.endsWith("-wal") ||
+            basename.endsWith("-shm")
+          ) {
+            continue;
+          }
+
+          if (entry.isDirectory()) {
+            copyDirRecursive(srcPath, destPath);
+          } else {
+            try {
+              // Only copy if we can actually read it
+              fs.copyFileSync(srcPath, destPath);
+            } catch (err) {
+              // Ignore lock errors (EBUSY, EPERM, EACCES)
+              console.warn(`Skipped locked file: ${srcPath}`);
+            }
+          }
+        }
+      };
+
+      copyDirRecursive(partitionsDir, path.join(tempExportDir, "Partitions"));
+    }
+
+    // Zip everything natively with adm-zip
+    const zip = new AdmZip();
+    zip.addLocalFolder(tempExportDir);
+    zip.writeZip(filePath);
+
+    try {
+      fs.removeSync(tempExportDir);
+    } catch (e) {}
+
+    return true;
   } catch (e) {
     console.error("Full Export error:", e);
+    try {
+      fs.removeSync(tempExportDir);
+    } catch (e) {}
     return false;
   }
 });
@@ -853,7 +961,8 @@ ipcMain.handle("import-data", async () => {
     );
     fs.ensureDirSync(tempDir);
 
-    await extract(filePath, { dir: tempDir });
+    const zip = new AdmZip(filePath);
+    zip.extractAllTo(tempDir, true);
 
     // 2. Move JSONs (using fs-extra copy)
     const files = ["shortcuts.json", "sessions.json", "preferences.json"];
@@ -867,7 +976,128 @@ ipcMain.handle("import-data", async () => {
     if (fs.existsSync(srcPartitions)) {
       const destPartitions = path.join(userData, "Partitions");
       fs.ensureDirSync(destPartitions);
-      fs.copySync(srcPartitions, destPartitions, { overwrite: true });
+
+      // Force Chromium to release file locks before we attempt to overwrite them
+      const allSessions = readJSON(path.join(userData, "sessions.json"), []);
+      for (const s of allSessions) {
+        if (s.sessionId) {
+          try {
+            const ses = session.fromPartition(`persist:${s.sessionId}`);
+            // This drops the active SQLite connections to Cache, Service Workers, Quota DBs
+            await ses.clearStorageData();
+            await ses.clearCache();
+          } catch (err) {}
+        }
+      }
+      try {
+        await session.defaultSession.clearStorageData();
+        await session.defaultSession.clearCache();
+      } catch (err) {}
+
+      // Give Windows OS time to physically release the file handles
+      await new Promise((r) => setTimeout(r, 1000));
+
+      const copyDirRecursiveImport = (src, dest) => {
+        fs.ensureDirSync(dest);
+        let entries = [];
+        try {
+          entries = fs.readdirSync(src, { withFileTypes: true });
+        } catch (e) {
+          console.warn(`Skipping import locked directory ${dest}:`, e);
+          return;
+        }
+
+        for (const entry of entries) {
+          const srcPath = path.join(src, entry.name);
+          const destPath = path.join(dest, entry.name);
+          const basename = entry.name;
+
+          const excludedNames = [
+            "Code Cache",
+            "GPUCache",
+            "blob_storage",
+            "Cache",
+            "Service Worker",
+            "Conversions",
+            "DawnGraphiteCache",
+            "DawnWebGPUCache",
+            "QuotaManager",
+            "QuotaManager-journal",
+            "QuotaManager-shm",
+            "QuotaManager-wal",
+          ];
+          if (excludedNames.includes(basename)) continue;
+
+          if (entry.isDirectory()) {
+            copyDirRecursiveImport(srcPath, destPath);
+          } else {
+            try {
+              fs.copyFileSync(srcPath, destPath);
+            } catch (err) {
+              console.warn(`Skipped overwriting locked file: ${destPath}`);
+            }
+          }
+        }
+      };
+
+      copyDirRecursiveImport(srcPartitions, destPartitions);
+
+      // Restore cookies from JSON backups
+      const sessionsForCookies = readJSON(
+        path.join(userData, "sessions.json"),
+        [],
+      );
+      for (const s of sessionsForCookies) {
+        if (s.sessionId) {
+          try {
+            const backupFile = path.join(
+              destPartitions,
+              s.sessionId,
+              "cookies_backup.json",
+            );
+            if (fs.existsSync(backupFile)) {
+              const cookiesArr = JSON.parse(
+                fs.readFileSync(backupFile, "utf-8"),
+              );
+              const ses = session.fromPartition(`persist:${s.sessionId}`);
+              for (const c of cookiesArr) {
+                let parsedDomain = c.domain.startsWith(".")
+                  ? c.domain.substring(1)
+                  : c.domain;
+                let parsedPath = c.path || "/";
+                let url =
+                  (c.secure ? "https://" : "http://") +
+                  parsedDomain +
+                  parsedPath;
+
+                const cookieDetails = {
+                  url: url,
+                  name: c.name,
+                  value: c.value,
+                  domain: c.domain,
+                  path: parsedPath,
+                  secure: c.secure,
+                  httpOnly: c.httpOnly,
+                };
+
+                if (c.expirationDate) {
+                  cookieDetails.expirationDate = c.expirationDate;
+                }
+
+                try {
+                  await ses.cookies.set(cookieDetails);
+                } catch (e) {
+                  console.warn("Failed to set cookie:", c.name, e.message);
+                }
+              }
+              await ses.flushStorageData();
+              fs.removeSync(backupFile);
+            }
+          } catch (err) {
+            console.error(`Failed to restore cookies for ${s.sessionId}`, err);
+          }
+        }
+      }
     }
 
     // 4. Cleanup
