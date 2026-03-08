@@ -162,22 +162,6 @@ function setupAppMenu() {
         },
         { type: "separator" },
         {
-          label: "Perbesar",
-          accelerator: "CmdOrCtrl+Plus",
-          click: () => zoomActiveTab(0.1),
-        },
-        {
-          label: "Perkecil",
-          accelerator: "CmdOrCtrl+-",
-          click: () => zoomActiveTab(-0.1),
-        },
-        {
-          label: "Reset Zoom",
-          accelerator: "CmdOrCtrl+0",
-          click: () => zoomActiveTab(0, true),
-        },
-        { type: "separator" },
-        {
           label: "Fokus ke Bar URL",
           accelerator: "CmdOrCtrl+L",
           click: () => sendToUI("shortcut-focus-url"),
@@ -216,7 +200,6 @@ function setupAppMenu() {
       label: "Jendela",
       submenu: [
         { role: "minimize" },
-        { role: "zoom" },
         ...(isMac ? [{ type: "separator" }, { role: "front" }] : []),
       ],
     },
@@ -761,7 +744,7 @@ ipcMain.handle("remove-session", (event, sessionId) => {
   writeJSON(sessionsPath(), sessions);
   try {
     session.fromPartition(`persist:${sessionId}`).clearStorageData();
-  } catch (e) {}
+  } catch (e) { }
   return sessions;
 });
 
@@ -816,7 +799,7 @@ ipcMain.handle("export-data", async () => {
     }
     try {
       await session.defaultSession.flushStorageData();
-    } catch (err) {}
+    } catch (err) { }
 
     await new Promise((resolve) => setTimeout(resolve, 500));
 
@@ -928,14 +911,14 @@ ipcMain.handle("export-data", async () => {
 
     try {
       fs.removeSync(tempExportDir);
-    } catch (e) {}
+    } catch (e) { }
 
     return true;
   } catch (e) {
     console.error("Full Export error:", e);
     try {
       fs.removeSync(tempExportDir);
-    } catch (e) {}
+    } catch (e) { }
     return false;
   }
 });
@@ -986,13 +969,13 @@ ipcMain.handle("import-data", async () => {
             // This drops the active SQLite connections to Cache, Service Workers, Quota DBs
             await ses.clearStorageData();
             await ses.clearCache();
-          } catch (err) {}
+          } catch (err) { }
         }
       }
       try {
         await session.defaultSession.clearStorageData();
         await session.defaultSession.clearCache();
-      } catch (err) {}
+      } catch (err) { }
 
       // Give Windows OS time to physically release the file handles
       await new Promise((r) => setTimeout(r, 1000));
