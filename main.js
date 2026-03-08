@@ -1090,7 +1090,7 @@ ipcMain.handle("import-data", async () => {
     setTimeout(() => {
       app.relaunch();
       app.exit(0);
-    }, 1000);
+    }, 100);
 
     return true;
   } catch (e) {

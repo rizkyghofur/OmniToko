@@ -80,6 +80,7 @@ const sessionSettingsCancel = document.getElementById(
 
 let currentRenameSessionId = null;
 let currentSettingsSessionId = null;
+const importLoadingOverlay = document.getElementById("import-loading-overlay");
 
 // --- Initialization ---
 
@@ -450,6 +451,7 @@ function init() {
       )
     ) {
       showDownloadToast("import", "📦 Memulihkan data... Mohon tunggu", 50);
+      importLoadingOverlay.classList.remove("hidden");
       const success = await window.omniAPI.importData();
       if (success) {
         showDownloadToast(
@@ -458,6 +460,7 @@ function init() {
           100,
         );
       } else {
+        importLoadingOverlay.classList.add("hidden");
         alert("Gagal mengimpor data. Pastikan file .zip cadangan valid.");
         removeDownloadToast("import");
       }
@@ -1080,9 +1083,6 @@ function showDownloadToast(id, message, percent) {
       <div class="toast-message">${message}</div>
       <button class="toast-close" title="Tutup">×</button>
     </div>
-    <div class="toast-progress-bar">
-      <div class="toast-progress-fill" style="width: ${percent}%"></div>
-    </div>
   `;
 
   // Add close event
@@ -1100,10 +1100,6 @@ function updateDownloadToast(id, message, percent) {
   const toast = document.getElementById(`toast-${id}`);
   if (toast) {
     toast.querySelector(".toast-message").textContent = message;
-    toast.querySelector(".toast-progress-fill").style.width = `${percent}%`;
-    if (percent >= 100) {
-      toast.querySelector(".toast-progress-fill").classList.add("complete");
-    }
   } else {
     showDownloadToast(id, message, percent);
   }
